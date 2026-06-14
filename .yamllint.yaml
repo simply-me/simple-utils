@@ -1,0 +1,12 @@
+---
+
+extends: default
+
+rules:
+  line-length: disable  # disable line length check as pipeline yaml files tend to exceed
+  new-lines: disable
+  document-start: disable
+  indentation:
+    spaces: 2
+    indent-sequences: whatever
+    check-multi-line-strings: false

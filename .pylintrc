@@ -1,0 +1,31 @@
+[MASTER]
+ignore=CVS,.git,venv,env,alembic,setup.py
+
+[FORMAT]
+max-line-length=88
+
+[MESSAGES CONTROL]
+disable=
+    C0111,  # Missing docstring (handled by flake8-docstrings)
+    W0511,  # TODO/FIXME messages
+    R0903,  # Too few public methods
+    C0103,  # Invalid name
+    R0913,  # Too many arguments
+    R0914   # Too many local variables
+
+[REPORTS]
+output-format=colorized
+reports=no
+score=no
+
+[SIMILARITIES]
+min-similarity-lines=4
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,id,df
+
+[VARIABLES]
+init-import=no

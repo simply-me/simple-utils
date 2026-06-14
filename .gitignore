@@ -1,0 +1,9 @@
+# Block the local development environment
+.venv/
+
+# Block temporary pipeline caches and folders
+__pycache__/
+.cache/
+build/
+dist/
+output/

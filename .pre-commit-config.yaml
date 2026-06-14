@@ -1,0 +1,185 @@
+---
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
+default_stages:
+  - pre-commit
+
+# Exclude the following folders from applying all pre-commit hooks
+# exclude: |
+#   (?x)
+#   (
+#     ^src/.*/lib/
+#   )
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0  # 2025-08-10
+    hooks:
+      - id: end-of-file-fixer  # files end in newline and only a newline
+      - id: trailing-whitespace  # trims trailing whitespace
+      - id: no-commit-to-branch  # checks branch name
+        # for GitHub Flow, allows feat/* fix/* prep/* docs/* user/*
+        # args: ["-p", '^(?!((feat|fix|prep|docs|user)\/[a-zA-Z0-9]+))']
+        # for trunk based development, main also needs to be allowed
+        args: ["-p", '^(?!(((feat|fix|prep|docs|user)\/[a-zA-Z0-9]+))|main$)', "-b", ""]
+
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.23.0  # 2025-10-02
+    hooks:
+      - id: commitlint  # commit message linter
+        stages: [commit-msg]
+        additional_dependencies: ['@commitlint/config-conventional']
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1  # 2025-01-29
+    hooks:
+      - id: codespell  # fix common misspellings
+        # files: ^.*\.(py|c|h|md|rst|yml)$  # uncomment to choose file types
+        args: ['--skip="./lib,./node_modules,*.svg"']
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.20.0  # 2025-12-07
+    hooks:
+      - id: markdownlint-cli2  # markdown linter faster than markdownlint-cli
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1  # 2025-05-04
+    hooks:
+      - id: yamllint  # yaml linter
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0  # 2025-11-27
+    hooks:
+      - id: gitleaks  # secrets checker
+
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.7.4  # 2025-12-03
+    hooks:
+      - id: prettier
+        types_or: [css, html, json, javascript, jsx, ts, tsx, vue]
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.39.0 # 2025-11-01
+    hooks:
+      - id: eslint
+        types_or: [javascript, jsx, ts, tsx, vue]
+        args: ['--fix', '--max-warnings=0']
+        additional_dependencies:
+          - eslint@^9.39.0
+          - '@eslint/js@^9.39.0'
+          - eslint-plugin-vue@^9.28.0
+          - vue-eslint-parser@^9.4.0
+          - '@typescript-eslint/eslint-plugin@^8.0.0'
+          - '@typescript-eslint/parser@^8.0.0'
+          - typescript@~4.7.4
+          - eslint-config-prettier@^9.1.0
+          - globals@^16.5.0 # 2025-11-01
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.36.0  ## 2025-12-15
+    hooks:
+      - id: check-jsonschema
+        args: ["--schemafile", ".jsonschema/json-schema-org-draft-2020-12.json"]
+        # exclude: ^package.json$
+        exclude: ^(package.json$|src/adf/)
+      - id: check-jsonschema
+        args: ["--schemafile", ".jsonschema/package-json.json"]
+        files: ^package.json$
+      - id: check-azure-pipelines
+        files: ^azure-pipelines\/.*(yaml|yml)$
+
+  # TypeScript type checking for Vue
+  # - repo: local
+  #   hooks:
+  #     - id: vue-tsc
+  #       name: vue-tsc
+  #       entry: npx vue-tsc --noEmit
+  #       language: system
+  #       files: \.(vue|ts|tsx)$
+  #       pass_filenames: false
+
+  # Pre-commit hook for opentofu using pre-commit-opentofu github repo
+  # - repo: https://github.com/tofuutils/pre-commit-opentofu
+  #   rev: v2.2.2  #2025-10-22
+  #   hooks:
+  #     - id: tofu_fmt  #Formatting tf files.
+
+  # Pre-commit hooks for opentofu using pre-installed tools
+  # - repo: local
+  #   hooks:
+  #       # For linting opentofu configuration files
+  #       # Ensure that you have tflint installed
+  #     - id: tofu_tflint
+  #       name: tofu_tflint
+  #       entry: bash -c 'tflint --config="$(git rev-parse --show-toplevel)/.tflint.hcl" --recursive --call-module-type=all'
+  #       language: system
+  #       files: \.(tf|tfvars)$
+
+  #       # For static files security scanning
+  #       # Ensure you have checkov installed
+  #     - id: tofu_checkov
+  #       name: tofu_checkov
+  #       entry: bash -c 'checkov -d . --compact --quiet'
+  #       language: system
+  #       pass_filenames: false
+  #       always_run: true
+
+  # Pre-commit hook for dotnet projects
+  # Use dotnet format already installed on your machine
+  # - repo: local
+  #   hooks:
+  #   - id: dotnet-format  # .net code analyzers
+  #     name: dotnet-format
+  #     language: system
+  #     entry: dotnet format ./src --include
+  #     types_or: ["c#", "vb"]
+
+  # Pre-commit hooks for tsql
+  # - repo: https://github.com/sqlfluff/sqlfluff
+  #   rev: 3.5.0  # 2025-10-18
+  #   hooks:
+  #     - id: sqlfluff-lint  # list errors but did not fix directly
+  #       name: sqlfluff-lint
+  #       entry: sqlfluff lint --dialect tsql
+  #       types: [sql]
+  #     - id: sqlfluff-fix  # fix errors during linting
+  #       name: sqlfluff-fix
+  #       entry: sqlfluff fix --dialect tsql
+  #       types: [sql]
+
+  # Pre-commit code formatter hook for python
+  - repo: https://github.com/psf/black
+    rev: 25.12.0  # 2025-12-08
+    hooks:
+      - id: black
+        args: [--line-length=88]
+
+  # Pre-commit hook for python for styleguide enforcement
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0  # 2025-06-21
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-docstrings  # Optional: adds pydocstyle checks
+          - flake8-bugbear     # Optional: adds various checks for likely bugs
+        args:
+          - --max-line-length=88  # Match Black's line length
+          - --extend-ignore=E203  # Ignore whitespace before ':' (Black formats differently)
+          - --extend-ignore=E501  # Let Black handle line length
+          - --disable-noqa # disallow checks using noqa
+        exclude: '^(venv/|env/)'
+
+  # Pre-commit hook to add static code analyser for python.
+  # Use pylint installed on your machine
+  - repo: local
+    hooks:
+    - id: pylint
+      name: pylint
+      entry: pylint
+      language: system
+      types: [python]
+      args:
+        - --max-line-length=88
+      require_serial: true
