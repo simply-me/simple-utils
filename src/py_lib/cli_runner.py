@@ -72,3 +72,23 @@ def run(
     except Exception as e:
         print(f"[ERROR] Subprocess system routing failed: {e}")
         raise
+
+
+if __name__ == "__main__":
+    print("--- Executing Standalone Diagnostic Test ---")
+
+    # FIX: Pass an actual module name ('pip') along with its flag ('--version')
+    print("\n[Test 1] Running Python module version test...")
+    test_args_1 = ["pip", "--version"]
+    exit_code_1 = run(tool_args=test_args_1, is_python_module=True)
+    print(f"Test 1 exited with code: {exit_code_1}")
+
+    # Test 2: Native system command test
+    print("\n[Test 2] Running native system continuous output test...")
+    import platform
+
+    ping_flag = "-n" if platform.system() == "Windows" else "-c"
+
+    test_args_2 = ["ping", ping_flag, "3", "127.0.0.1"]
+    exit_code_2 = run(tool_args=test_args_2, is_python_module=False)
+    print(f"Test 2 exited with code: {exit_code_2}")
