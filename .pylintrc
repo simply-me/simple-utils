@@ -1,5 +1,7 @@
 [MASTER]
 ignore=CVS,.git,venv,env,alembic,setup.py
+# Automatically injects your library path for pre-commit, build.sh, and IDE extensions
+init-hook="import sys; sys.path.insert(0, 'src/py_lib')"
 
 [FORMAT]
 max-line-length=110

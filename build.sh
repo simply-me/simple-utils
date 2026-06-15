@@ -49,7 +49,7 @@ pip install pylint pytest pytest-cov --quiet
 
 # 4. Run Automated Testing Suite inside the Isolated Sandbox
 echo
-echo "[4] Launching code tests and syntax verification..."
+echo " Launching code tests and syntax verification..."
 echo "------------------------------------------------------------"
 
 # Check syntax across all staged files using compileall
@@ -60,12 +60,11 @@ python -m compileall -q build/src/py_lib || {
 }
 
 echo "Running structural quality checks (Pylint)..."
-export PYTHONPATH="$(pwd)/src/py_lib"
-python -m pylint src/py_lib --rcfile=.pylintrc --output-format=colorized || PYLINT_ERROR=$?
+# Clean, direct invocation
+python -m pylint src/py_lib test/ --rcfile=.pylintrc --output-format=colorized || PYLINT_ERROR=$?
 
 # Capture Pylint exit code if it failed (if it passed, set to 0)
 PYLINT_ERROR=${PYLINT_ERROR:-0}
-unset PYTHONPATH
 
 # Bitmask: 1 (Fatal) + 2 (Error) + 32 (Config Error) = 35
 HARD_FAILURES=$(( PYLINT_ERROR & 35 ))
