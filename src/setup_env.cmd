@@ -1,25 +1,28 @@
 @echo off
 SETLOCAL EnableExtensions
 
-:: Create the venv in a subfolder right next to this script
-if not exist "%~dp0.venv" (
-    echo Creating production virtual environment...
-    py -m venv "%~dp0.venv"
+:: Create a clean venv in the py_lib subfolder under this folder
+echo Creating clean virtual environment...
+py -m venv --clear "%~dp0py_lib\.venv"
+if errorlevel 1 (
+    echo [CRITICAL] Failed to create clean virtual environment!
+    pause
+    exit /b 1
 )
 
 :: Activate the local deployment venv
-call "%~dp0.venv\Scripts\activate.bat"
+call "%~dp0py_lib\.venv\Scripts\activate.bat"
 python -m pip install --upgrade pip --quiet
 
 :: Install from requirements.txt in the same folder
-if exist "%~dp0requirements.txt" (
+if exist "%~dp0py_lib\requirements.txt" (
     echo Installing production dependencies...
-    pip install -r "%~dp0requirements.txt"
+    pip install -r "%~dp0py_lib\requirements.txt"
 ) else (
     echo ERROR: requirements.txt not found!
     pause
     exit /b 1
 )
 
-echo CONFIGURATION COMPLETE: Production runtime environment is ready.
+echo CONFIGURATION COMPLETE: Simple Utils runtime environment is ready.
 pause

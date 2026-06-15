@@ -1,11 +1,15 @@
 @echo off
 SETLOCAL EnableExtensions
 
-:: Create the development venv at the project root level
-if not exist .venv (
-    echo Creating development virtual environment...
-    py -m venv .venv
+:: Create a clean development venv at the project root level
+echo Creating clean development virtual environment...
+py -m venv --clear.venv
+if errorlevel 1 (
+    echo [CRITICAL] Failed to create clean development virtual environment!
+    pause
+    exit /b 1
 )
+
 call .venv\Scripts\activate.bat
 python -m pip install --upgrade pip --quiet
 
