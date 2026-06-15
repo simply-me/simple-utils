@@ -29,7 +29,7 @@ python -m venv build/.build_venv || {
     exit 1
 }
 
-# 3. Activate and Hydrate the Build Environment
+# 3. Activation and Hydrate the Build Environment
 echo
 echo "[3] Activating clean sandbox environment..."
 # shellcheck disable=SC1091
@@ -44,8 +44,8 @@ if [ ! -f "build/src/py_lib/requirements.txt" ]; then
 fi
 pip install -r build/src/py_lib/requirements.txt --quiet
 
-# Temporarily install pylint to sandbox
-pip install pylint --quiet
+# Temporarily install validation tools to the sandbox
+pip install pylint pytest pytest-cov --quiet
 
 # 4. Run Automated Testing Suite inside the Isolated Sandbox
 echo
@@ -87,7 +87,7 @@ if [ "$PYLINT_ERROR" -gt 0 ]; then
     read -r -p "Would you like to bypass these style warnings and complete the deployment anyway? (y/n): " CHOICE
     case "$CHOICE" in
         [yY][eE][sS]|[yY])
-            echo "Bypassing warnings. Proceeding to deployment..."
+            echo "Bypassing warnings. Proceeding to unit testing..."
             ;;
         *)
             echo "Deployment aborted by user."
@@ -96,6 +96,15 @@ if [ "$PYLINT_ERROR" -gt 0 ]; then
             ;;
     esac
 fi
+
+# Added the Pytest automation phase directly into the sandbox verification pipeline
+echo "Running automated unit tests and tracking coverage..."
+python -m pytest || {
+    echo
+    echo "[CRITICAL] Automated unit tests failed inside pristine sandbox!"
+    deactivate
+    exit 1
+}
 
 echo "------------------------------------------------------------"
 echo "[✓] All validation tests completed successfully!"

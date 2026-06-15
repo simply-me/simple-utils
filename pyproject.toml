@@ -15,3 +15,9 @@ exclude = '''
     )/
 )
 '''
+
+[tool.pytest.ini_options]
+pythonpath = ["src/py_lib"]
+testpaths = ["test"]
+# Automatically tracks coverage for your core scripts and outputs the visual report
+addopts = "--cov=src/py_lib --cov-report=term-missing"
