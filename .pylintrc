@@ -2,7 +2,7 @@
 ignore=CVS,.git,venv,env,alembic,setup.py
 
 [FORMAT]
-max-line-length=88
+max-line-length=110
 
 [MESSAGES CONTROL]
 disable=
