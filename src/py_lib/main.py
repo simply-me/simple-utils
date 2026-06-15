@@ -1,75 +1,78 @@
-"""Main entry point for the unified document and font optimization tool suite."""
+"""Python CLI Application Launcher and Subprocess Router."""
 
-import argparse
 import sys
+import argparse
+from typing import List
 
-# Modular file structural references
-import fitz_wrapper
-import pdf_optimizer
-import font_subsetter
-import pipeline_workflow
+# Imports our real-time streaming runner function from cli_runner.py
+import cli_runner
 
 
-def main():
-    """Parse command-line arguments and dispatch to the appropriate utility function."""
+def parse_application_args() -> argparse.Namespace:
+    """Sets up the argument parser to extract the target tool and configuration flags."""
     parser = argparse.ArgumentParser(
-        description="Unified Document & Font Optimization Tool suite",
+        description="Generic Python Launcher and Subprocess CLI Router.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    subparsers = parser.add_subparsers(
-        dest="command", required=True, help="Target Utility"
-    )
-
-    # 1. PyMuPDF CLI Wrapper
-    mupdf_p = subparsers.add_parser(
-        "pdf-cli", help="Direct PyMuPDF/MuPDF native command wrapper tools"
-    )
-    mupdf_p.add_argument("action", choices=["clean", "info"], help="Action to execute")
-    mupdf_p.add_argument("pdf_path", type=str, help="Target PDF filename path")
-
-    # 2. Aggressive PDF Compressor
-    compress_p = subparsers.add_parser(
-        "pdf-compress",
-        help="Aggressive stream compression & garbage collection algorithms",
-    )
-    compress_p.add_argument("pdf_path", type=str, help="Source PDF filepath")
-    compress_p.add_argument("-o", "--output", type=str, help="Custom export location")
-
-    # 3. FontTools Subset Wrapper
-    subset_p = subparsers.add_parser(
-        "font-subset", help="Raw CLI wrapper shortcut targeting font subsetting tables"
-    )
-    subset_p.add_argument(
-        "font_path", type=str, help="Source font filepath (.ttf or .otf)"
-    )
-    subset_p.add_argument(
-        "--chars", type=str, help="Literal text character string to retain"
-    )
-    subset_p.add_argument(
-        "--unicodes", type=str, help="Target Unicode numeric ranges (e.g., U+0020-007E)"
+        epilog="""
+Examples:
+  python main.py pymupdf clean input.pdf output.pdf
+  python main.py git status --exe
+        """,
     )
 
-    # 4. Multi-Library Pipeline Workflow
-    pipe_p = subparsers.add_parser(
-        "pipeline",
-        help="Advanced multi-pass: extract text character lists via fitz and subset via fontTools",
+    # The tool to execute (e.g., 'pymupdf', 'pylint', 'git')
+    parser.add_argument(
+        "tool",
+        type=str,
+        help="The name of the CLI tool or Python module you want to run.",
     )
-    pipe_p.add_argument("epub_path", type=str, help="Source book template file (.epub)")
-    pipe_p.add_argument("font_path", type=str, help="Source base font file template")
 
-    args = parser.parse_args()
+    # Captures all subsequent flags, options, and file paths passed behind the tool
+    parser.add_argument(
+        "args",
+        nargs=argparse.REMAINDER,
+        help="All additional positional and optional arguments to forward to the tool.",
+    )
+
+    # An optional switch if you want to explicitly declare it's a standalone native binary
+    parser.add_argument(
+        "--exe",
+        action="store_true",
+        help="Forces execution of exe instead of a local .venv Python module.",
+    )
+
+    return parser.parse_args()
+
+
+def main() -> None:
+    """Main entry point for the CLI application launcher."""
+    # 1. Protection Check: Ensure at least one argument was passed down to the interpreter
+    if len(sys.argv) < 2:
+        print("[ERROR] Minimal parameters missing.")
+        print("Usage: python main.py <tool_name> [tool_arguments...] [--exe]")
+        sys.exit(1)
+
+    # 2. Extract and parse parameters
+    parsed_args = parse_application_args()
+
+    # 3. Combine the primary tool name and trailing arguments into a single execution list
+    full_tool_command: List[str] = [parsed_args.tool] + parsed_args.args
+
+    # If the user passed '--exe' explicitly, we tell the runner not to append 'python -m'
+    is_module = not parsed_args.exe
+
+    print("[Application Execution Router Initialised]")
 
     try:
-        if args.command == "pdf-cli":
-            fitz_wrapper.run(args.action, args.pdf_path)
-        elif args.command == "pdf-compress":
-            pdf_optimizer.run(args.pdf_path, args.output)
-        elif args.command == "font-subset":
-            font_subsetter.run(args.font_path, args.chars, args.unicodes)
-        elif args.command == "pipeline":
-            pipeline_workflow.run(args.epub_path, args.font_path)
+        # 4. Forward the constructed command array to the real-time stream monitor
+        exit_code = cli_runner.run(
+            tool_args=full_tool_command, is_python_module=is_module
+        )
+        sys.exit(exit_code)
+
     except Exception as e:
-        print(f"\n[❌ RUNTIME FAULT] Pipeline stopped: {e}", file=sys.stderr)
+        # Gracefully exit if a critical execution or pipeline breakage happened
+        print(f"[CRITICAL] Router crashed due to system error: {e}")
         sys.exit(1)
 
 
