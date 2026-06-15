@@ -181,5 +181,6 @@ repos:
       language: system
       types: [python]
       args:
-        - --max-line-length=88
+        - --rcfile=.pylintrc
+        - --output-format=colorized
       require_serial: true
