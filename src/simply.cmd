@@ -44,8 +44,11 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
+:: Retain the current directory context for the core routing script
+popd
+
 :: 3. Forward parameters to the core routing script
-python "py_lib\main.py" %*
+python "%~dp0py_lib\main.py" %*
 
 if %ERRORLEVEL% neq 0 (
     echo.
@@ -56,5 +59,4 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-popd
 exit /b 0
