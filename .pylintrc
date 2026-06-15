@@ -8,6 +8,7 @@ max-line-length=110
 disable=
     C0111,  # Missing docstring (handled by flake8-docstrings)
     W0511,  # TODO/FIXME messages
+    W0718,  # Exception is too general
     R0903,  # Too few public methods
     C0103,  # Invalid name
     R0913,  # Too many arguments
