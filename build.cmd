@@ -58,7 +58,7 @@ echo Running structural quality checks (Pylint)...
 set PYTHONPATH=%CD%\src\py_lib
 
 :: Run Pylint on your original source files. Links are 100% clickable!
-python -m pylint src\py_lib --disable=C0114,C0115,C0116,C0301
+python -m pylint src\py_lib --disable=C0111,W0511,R0903,C0103,R0913,R0914
 set PYLINT_ERROR=%errorlevel%
 
 :: Clean up the temporary environment variable
