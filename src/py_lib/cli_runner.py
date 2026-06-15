@@ -35,16 +35,18 @@ def run(
     else:
         full_command = tool_args
 
-    print(f"[Launcher] Running: {' '.join(full_command)}\n" + "-" * 60)
+    # Clean header with unified divider widths
+    print(f"Running command: {' '.join(full_command)}")
+    print("-" * 50)
 
     try:
         # Open the process with piped streams and real-time line buffering
         with subprocess.Popen(
             full_command,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,  # Merges stderr into stdout stream for sequential printing
-            text=True,  # Decodes raw bytes to readable string text automatically
-            bufsize=1,  # Line buffered tracking
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
             cwd=working_dir,
             env=custom_env,
         ) as process:
@@ -61,30 +63,31 @@ def run(
             # Wait for the official shutdown tracking loop to finish up
             returncode = process.wait()
 
-        print("-" * 60)
+        print("-" * 50)
 
         if returncode != 0:
-            print(f"[CRITICAL] Process failed with exit code: {returncode}")
+            print(f"Process failed with exit code: {returncode}", file=sys.stderr)
             raise subprocess.CalledProcessError(returncode, full_command)
 
-        print("[SUCCESS] Process completed without errors.")
+        print("Process completed successfully.")
         return returncode
 
     except Exception as e:
-        print(f"[ERROR] Subprocess system routing failed: {e}")
+        # Clean, isolated error block matching main.py structure
+        print("\n" + "=" * 50, file=sys.stderr)
+        print(f"SUBPROCESS EXECUTION ERROR: {e}", file=sys.stderr)
+        print("=" * 50 + "\n", file=sys.stderr)
         raise
 
 
 if __name__ == "__main__":
     print("--- Executing Standalone Diagnostic Test ---")
 
-    # FIX: Pass an actual module name ('pip') along with its flag ('--version')
     print("\n[Test 1] Running Python module version test...")
     test_args_1 = ["pip", "--version"]
     exit_code_1 = run(tool_args=test_args_1, mode="py")
     print(f"Test 1 exited with code: {exit_code_1}")
 
-    # Test 2: Native system command test
     print("\n[Test 2] Running native system continuous output test...")
     import platform
 
