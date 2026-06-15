@@ -1,78 +1,62 @@
-"""Python CLI Application Launcher and Subprocess Router."""
+"""Simplified Python CLI Application Launcher and Subprocess Router."""
 
 import sys
 import argparse
 from typing import List
-
-# Imports our real-time streaming runner function from cli_runner.py
 import cli_runner
 
 
-def parse_application_args() -> argparse.Namespace:
-    """Sets up the argument parser to extract the target tool and configuration flags."""
+def parse_launcher_mode(parser_args: List[str]) -> argparse.Namespace:
+    """Parses only the initial routing command, leaving downstream flags untouched."""
     parser = argparse.ArgumentParser(
-        description="Generic Python Launcher and Subprocess CLI Router.",
+        description="Simplified CLI Subprocess Router.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python main.py pymupdf clean input.pdf output.pdf
-  python main.py git status --exe
-        """,
+   simply run git status
+   simply run pyftsubset --input font.ttf --output font-subset.ttf --unicodes=U+0020-007E
+   simply py pymupdf --input document.pdf --output compressed.pdf
+   simply py pdf_optimizer --input document.pdf --output compressed.pdf
+   """,
     )
 
-    # The tool to execute (e.g., 'pymupdf', 'pylint', 'git')
     parser.add_argument(
-        "tool",
+        "mode",
+        choices=["run", "py"],
+        help="Execution mode: 'run' for system binaries, 'py' for python modules.",
+    )
+
+    parser.add_argument(
+        "target",
         type=str,
-        help="The name of the CLI tool or Python module you want to run.",
+        help="The name of the executable or Python module.",
     )
 
-    # Captures all subsequent flags, options, and file paths passed behind the tool
-    parser.add_argument(
-        "args",
-        nargs=argparse.REMAINDER,
-        help="All additional positional and optional arguments to forward to the tool.",
-    )
-
-    # An optional switch if you want to explicitly declare it's a standalone native binary
-    parser.add_argument(
-        "--exe",
-        action="store_true",
-        help="Forces execution of exe instead of a local .venv Python module.",
-    )
-
-    return parser.parse_args()
+    parsed, remaining_args = parser.parse_known_args(parser_args)
+    parsed.downstream_args = remaining_args
+    return parsed
 
 
 def main() -> None:
-    """Main entry point for the CLI application launcher."""
-    # 1. Protection Check: Ensure at least one argument was passed down to the interpreter
-    if len(sys.argv) < 2:
-        print("[ERROR] Minimal parameters missing.")
-        print("Usage: python main.py <tool_name> [tool_arguments...] [--exe]")
-        sys.exit(1)
+    """Main entry point for the simplified application launcher."""
+    raw_args = sys.argv[1:]
 
-    # 2. Extract and parse parameters
-    parsed_args = parse_application_args()
+    parsed_config = parse_launcher_mode(raw_args)
 
-    # 3. Combine the primary tool name and trailing arguments into a single execution list
-    full_tool_command: List[str] = [parsed_args.tool] + parsed_args.args
+    forwarded_args = parsed_config.downstream_args
+    if forwarded_args and forwarded_args == "--":
+        forwarded_args = forwarded_args[1:]
 
-    # If the user passed '--exe' explicitly, we tell the runner not to append 'python -m'
-    is_module = not parsed_args.exe
+    full_tool_command: List[str] = [parsed_config.target] + forwarded_args
 
-    print("[Application Execution Router Initialised]")
+    print(f"[Router Initialised | Mode: {parsed_config.mode}]")
 
     try:
-        # 4. Forward the constructed command array to the real-time stream monitor
-        exit_code = cli_runner.run(
-            tool_args=full_tool_command, is_python_module=is_module
-        )
+        exit_code = cli_runner.run(tool_args=full_tool_command, mode=parsed_config.mode)
         sys.exit(exit_code)
 
     except Exception as e:
-        # Gracefully exit if a critical execution or pipeline breakage happened
-        print(f"[CRITICAL] Router crashed due to system error: {e}")
+        print(f"[CRITICAL] Router crashed due to execution error: {e}")
         sys.exit(1)
 
 

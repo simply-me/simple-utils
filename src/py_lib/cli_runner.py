@@ -7,14 +7,14 @@ from typing import List, Optional, Dict
 
 def run(
     tool_args: List[str],
-    is_python_module: bool = True,
+    mode: str = "py",
     working_dir: Optional[str] = None,
     custom_env: Optional[Dict[str, str]] = None,
 ) -> int:
     """Executes any CLI tool and streams its stdout/stderr in real time to the console.
 
     :param tool_args: A list of strings representing the tool and its flags/arguments.
-    :param is_python_module: If True, prepends sys.executable + "-m" to isolate the call.
+    :param mode: Execution routing framework. Accepts 'py' or 'run'.
     :param working_dir: Path to the directory where the command should execute.
     :param custom_env: Optional dictionary to update environment variables.
     :return: The integer exit status code of the completed process.
@@ -22,8 +22,11 @@ def run(
     if not tool_args:
         raise ValueError("The tool_args list cannot be empty.")
 
+    if mode not in ["py", "run"]:
+        raise ValueError(f"Unsupported routing engine profile: {mode}")
+
     # Normalise parameters to prevent double-nesting modules
-    if is_python_module:
+    if mode == "py":
         if tool_args[0].lower() in ["python", "python3"]:
             tool_args = tool_args[1:]
         if tool_args[0] == "-m":
@@ -35,8 +38,6 @@ def run(
     print(f"[Launcher] Running: {' '.join(full_command)}\n" + "-" * 60)
 
     try:
-        # Open the process with piped streams and real-time line buffering
-        # Read the stream buffer line-by-line while the process runs
         # Open the process with piped streams and real-time line buffering
         with subprocess.Popen(
             full_command,
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     # FIX: Pass an actual module name ('pip') along with its flag ('--version')
     print("\n[Test 1] Running Python module version test...")
     test_args_1 = ["pip", "--version"]
-    exit_code_1 = run(tool_args=test_args_1, is_python_module=True)
+    exit_code_1 = run(tool_args=test_args_1, mode="py")
     print(f"Test 1 exited with code: {exit_code_1}")
 
     # Test 2: Native system command test
@@ -90,5 +91,5 @@ if __name__ == "__main__":
     ping_flag = "-n" if platform.system() == "Windows" else "-c"
 
     test_args_2 = ["ping", ping_flag, "3", "127.0.0.1"]
-    exit_code_2 = run(tool_args=test_args_2, is_python_module=False)
+    exit_code_2 = run(tool_args=test_args_2, mode="run")
     print(f"Test 2 exited with code: {exit_code_2}")
