@@ -16,7 +16,6 @@ rm -rf build
 mkdir -p build/src
 
 echo "Copying source code and requirements to build/src staging..."
-# Replaced rsync: Recursively copy, then strip out caches and environment directories
 cp -r src/* build/src/
 find build/src/ -type d \( -name "__pycache__" -o -name ".venv" -o -name "venv" -o -name ".git" \) -exec rm -rf {} + 2>/dev/null || true
 find build/src/ -type f -name "*.pyc" -delete 2>/dev/null || true
@@ -32,14 +31,18 @@ python -m venv build/.build_venv || {
 # Activation and Hydrate the Build Environment
 echo
 echo "Activating clean sandbox environment..."
+# Disable unbound variable checking temporarily.
+# Virtualenv activation scripts natively use uninitialized variables which crashes 'set -u'.
+set +u
 # shellcheck disable=SC1091
 source build/.build_venv/Scripts/activate
+set -u
 
 echo "Upgrading pipeline dependencies..."
 python -m pip install --upgrade pip --quiet
 if [ ! -f "build/src/py_lib/requirements.txt" ]; then
     echo "[CRITICAL] requirements.txt missing from src/py_lib folder!"
-    deactivate
+    deactivate 2>/dev/null || true
     exit 1
 fi
 pip install -r build/src/py_lib/requirements.txt --quiet
@@ -57,7 +60,7 @@ echo "------------------------------------------------------------"
 echo "Checking fundamental syntax (Compileall)..."
 python -m compileall -q build/src/py_lib || {
     echo "[CRITICAL] Syntax validation failed inside pristine environment!"
-    deactivate
+    deactivate 2>/dev/null || true
     exit 1
 }
 echo "-> Syntax validation successful."
@@ -67,11 +70,9 @@ echo
 echo "------------------------------------------------------------"
 echo "Running structural quality checks (Pylint)..."
 echo "------------------------------------------------------------"
-# Clean, direct invocation
+# Initializing variable and safely wrapping execution to prevent 'set -e' from halting early
+PYLINT_ERROR=0
 python -m pylint src/py_lib test/ --rcfile=.pylintrc --output-format=colorized || PYLINT_ERROR=$?
-
-# Capture Pylint exit code if it failed (if it passed, set to 0)
-PYLINT_ERROR=${PYLINT_ERROR:-0}
 
 # Bitmask: 1 (Fatal) + 2 (Error) + 32 (Config Error) = 35
 HARD_FAILURES=$(( PYLINT_ERROR & 35 ))
@@ -80,7 +81,7 @@ if [ "$HARD_FAILURES" -gt 0 ]; then
     echo
     echo "[CRITICAL] Pylint detected blocking Errors or Fatal syntax crashes!"
     echo "Please fix all actual Errors before attempting to build."
-    deactivate
+    deactivate 2>/dev/null || true
     exit 1
 fi
 
@@ -98,12 +99,11 @@ if [ "$PYLINT_ERROR" -gt 0 ]; then
             ;;
         *)
             echo "Deployment aborted by user."
-            deactivate
+            deactivate 2>/dev/null || true
             exit 1
             ;;
     esac
 else
-    # FIXED: Added clean confirmation block when Pylint yields an absolute zero error run
     echo "-> Code style and structural checks successful."
     echo
 fi
@@ -112,14 +112,14 @@ fi
 echo "------------------------------------------------------------"
 echo "Running strict type layout verification (Mypy)..."
 echo "------------------------------------------------------------"
-# Using --ignore-missing-imports to cleanly bypass missing type stubs for fitz (PyMuPDF)
+# Initializing variable and safely wrapping execution to prevent 'set -e' from halting early
+MYPY_ERROR=0
 python -m mypy src/py_lib/ --ignore-missing-imports || MYPY_ERROR=$?
 
-MYPY_ERROR=${MYPY_ERROR:-0}
 if [ "$MYPY_ERROR" -gt 0 ]; then
     echo
     echo "[CRITICAL] Mypy detected strict type inconsistencies or logical data mismatches!"
-    deactivate
+    deactivate 2>/dev/null || true
     exit 1
 fi
 echo "-> Type layout verification successful."
@@ -132,7 +132,7 @@ echo "------------------------------------------------------------"
 python -m pytest || {
     echo
     echo "[CRITICAL] Automated unit tests failed inside pristine sandbox!"
-    deactivate
+    deactivate 2>/dev/null || true
     exit 1
 }
 
@@ -150,16 +150,27 @@ cp -r build/src/* dist/simple-utils/
 find dist/simple-utils/ -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 find dist/simple-utils/ -type f -name "*.pyc" -delete 2>/dev/null || true
 
-# TODO: create version file in dist
+# Package the application into a zip file using native Python shutil
+echo "Packaging simple-utils into a compressed zip file..."
+(
+    cd dist
+    python -c "import shutil; shutil.make_archive('simple-utils', 'zip', 'simple-utils')" || {
+        echo "[CRITICAL] Failed to create compressed zip archive!"
+        exit 1
+    }
+)
 
 # Deactivate and wipe sandbox environment
-deactivate
+set +u
+deactivate 2>/dev/null || true
+set -u
+
 echo "Cleaning up temporary sandbox environment files..."
 rm -rf build/.build_venv
 
 echo
 echo "============================================================"
-echo " BUILD SUCCESSFUL! Clean production files ready in /dist"
+echo " BUILD SUCCESSFUL! Clean production zip ready in dist/simple-utils.zip"
 echo "============================================================"
 echo
 exit 0
