@@ -2,7 +2,7 @@
 
 import subprocess
 import sys
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 
 def run(
@@ -18,6 +18,7 @@ def run(
     :param working_dir: Path to the directory where the command should execute.
     :param custom_env: Optional dictionary to update environment variables.
     :return: The integer exit status code of the completed process.
+    :raises ValueError: Raised on empty argument payloads or invalid structural modes.
     """
     if not tool_args:
         raise ValueError("The tool_args list cannot be empty.")

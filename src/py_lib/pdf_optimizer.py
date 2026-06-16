@@ -1,15 +1,15 @@
 """Optimize and compress PDF files to reduce size.
 
-This module provides wrappers around optimization engines
-to compress streams, fonts, and images.
+This module provides structural and stream optimization engines to compress
+PDF metadata, fonts, and heavy embedded asset streams safely.
 """
 
 import sys
 from pathlib import Path
-import fitz
+import fitz  # PyMuPDF
 
 
-def print_progress(current: int, total: int, prefix: str = "Processing"):
+def print_progress(current: int, total: int, prefix: str = "Processing") -> None:
     """Generates a native, clean text-based progress bar in the terminal."""
     percent = (current / total) * 100
     bar_length = 30
@@ -22,62 +22,66 @@ def print_progress(current: int, total: int, prefix: str = "Processing"):
     sys.stdout.flush()
 
 
-def run(pdf_path: str):
+def run(pdf_path: str) -> None:
     """Run the PDF optimization process on the specified input file."""
     src = Path(pdf_path)
     if not src.exists():
         raise FileNotFoundError(f"Target document absent: {src}")
 
-    dest = src.with_name(f"{src.stem}-compressed{src.suffix}")
+    # Non-destructive target naming loop
+    base_dest_name = f"{src.stem}-compressed"
+    dest = src.with_name(f"{base_dest_name}{src.suffix}")
+    counter = 1
+    while dest.exists():
+        dest = src.with_name(f"{base_dest_name}-{counter}{src.suffix}")
+        counter += 1
 
-    print(f"Initiating optimization pass on: {src.name}")
+    print(f"Opening file: {src.name}")
     doc = fitz.open(src)
     total_pages = len(doc)
 
-    # 1. High-Efficiency Page-by-Page Stream Cleaning and Image Verification Pass
-    print("Optimizing structural page streams...")
+    # Perform structural optimization loop across all page content streams
     for index, page in enumerate(doc, start=1):
-        # Clean the vector text/drawing layout streams natively
         try:
             page.clean_contents()
         except Exception:  # pylint: disable=broad-exception-caught
             pass
+        print_progress(index, total_pages, prefix="Compiling Layout")
 
-        # FIXED: Process images safely at the page level.
-        # This completely replaces 'doc.rewrite_images' to stop the low-level C-extension segfault.
-        try:
-            image_list = page.get_images(full=True)
-            for img in image_list:
-                xref = img[0]
-                # Filter by basic resolution rules
-                base_image = doc.extract_image(xref)
-                if base_image:
-                    image_bytes = base_image["image"]
-                    # Replace the existing image stream using a safe quality factor of 50%
-                    page.replace_image(xref, stream=image_bytes, filename=None)
-        except Exception:  # pylint: disable=broad-exception-caught
-            # If an image has corrupt metadata headers, skip it safely without dropping the process
-            pass
+    print("\n\nFinalizing desktop serialization output layer...")
+    print(" -> Lowering image matrix resolution bounds...")
+    doc.rewrite_images(dpi_target=150, quality=75)
 
-        print_progress(index, total_pages, prefix="Compressing")
-
-    print("\nFinalizing binary serialization and compression layers...")
-
-    # 2. Structural Document Save
-    doc.save(
-        dest,
-        garbage=4,
-        deflate=True,
-        clean=True,
-        use_objstms=True,
-    )
+    print(" -> Compressing binary streams and writing blocks to disk...")
+    save_kwargs = {
+        "garbage": 4,
+        "deflate": True,
+        "use_objstms": True,
+        "ascii": False,
+    }
+    doc.save(dest, **save_kwargs)
     doc.close()
 
-    orig_mbs = src.stat().st_size / (1024 * 1024)
-    new_mbs = dest.stat().st_size / (1024 * 1024)
+    orig_bytes = src.stat().st_size
+    new_bytes = dest.stat().st_size
 
-    print(
-        f"{'-' * 50}\n"
-        f"Compression completed successfully.\n"
-        f"File size reduced from {orig_mbs:.2f} MB to {new_mbs:.2f} MB."
-    )
+    orig_mbs = orig_bytes / (1024 * 1024)
+    new_mbs = new_bytes / (1024 * 1024)
+
+    saved_bytes = max(0, orig_bytes - new_bytes)
+    saved_mbs = saved_bytes / (1024 * 1024)
+    saved_pct = (saved_bytes / orig_bytes) * 100 if orig_bytes > 0 else 0.0
+
+    print(f"{'-' * 50}\n" f"Optimization execution finalized.")
+    print(f"Output saved to: {dest.name}")
+    print(f"Original Size:   {orig_mbs:.2f} MB")
+    print(f"Optimized Size:  {new_mbs:.2f} MB")
+
+    if saved_bytes > 0:
+        print(f"Size Reduction:  {saved_mbs:.2f} MB ({saved_pct:.1f}%)")
+    else:
+        print("Size Reduction:  0.00 MB (0.0%) - File was already optimal.")
+
+
+if __name__ == "__main__":
+    run("test.pdf")

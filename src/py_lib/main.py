@@ -1,23 +1,28 @@
 """Simple Python CLI Application Launcher and Subprocess Router."""
 
-import sys
 import argparse
+import sys
 from typing import List
+
 import cli_runner
 import intercepts
 
 
 def parse_launcher_mode(parser_args: List[str]) -> argparse.Namespace:
-    """Parses only the initial routing command, leaving downstream flags untouched."""
+    """Parses only the initial routing command, leaving downstream flags untouched.
+
+    :param parser_args: Pure command-line argument tokens.
+    :return: Parsed namespace housing mode, target, and trailing downstream stream arrays.
+    """
     parser = argparse.ArgumentParser(
-        description="simply: A minimal CLI launcher and subprocess router.",
+        description="Simply: A minimal CLI launcher and subprocess router.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   simply run git status
   simply run pyftsubset --input font.ttf --output font-subset.ttf --unicodes=U+0020-007E
   simply py pymupdf --input document.pdf --output compressed.pdf
-  simply py pdf-compress --input document.pdf
+  simply py pdf-compress document.pdf
 """,
     )
 
@@ -45,10 +50,9 @@ def main() -> None:
     parsed_config = parse_launcher_mode(raw_args)
 
     forwarded_args = parsed_config.downstream_args
-    if forwarded_args and forwarded_args[0] == "--":
+    if forwarded_args and forwarded_args == "--":
         forwarded_args = forwarded_args[1:]
 
-    # Vertical spacing before and after the status declaration
     print(f"\nRouting execution via mode: '{parsed_config.mode}'\n{'-' * 50}\n")
 
     try:
@@ -70,7 +74,6 @@ def main() -> None:
         sys.exit(exit_code)
 
     except Exception as e:
-        # High-visibility decoupled failure trace layout blocks
         print(
             f"\n{'=' * 50}\nCRITICAL ROUTER ERROR: {e}\n{'=' * 50}\n", file=sys.stderr
         )
