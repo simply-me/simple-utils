@@ -11,7 +11,7 @@ def run(
     working_dir: Optional[str] = None,
     custom_env: Optional[Dict[str, str]] = None,
 ) -> int:
-    """Executes any CLI tool and streams its stdout/stderr in real time to the console.
+    """Executes any CLI tool and leverages native OS-level stream piping.
 
     :param tool_args: A list of strings representing the tool and its flags/arguments.
     :param mode: Execution routing framework. Accepts 'py' or 'run'.
@@ -36,31 +36,17 @@ def run(
         full_command = tool_args
 
     # Clean header with unified divider widths
-    print(f"Running command: {' '.join(full_command)}")
-    print("-" * 50)
+    print(f"Running command: {' '.join(full_command)}\n{'-' * 50}")
 
     try:
-        # Open the process with piped streams and real-time line buffering
+        # Piping directly to sys.stdout lets the OS engine handle stream rendering at maximum speed.
         with subprocess.Popen(
             full_command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
             cwd=working_dir,
             env=custom_env,
         ) as process:
-
-            # Read the stream buffer line-by-line while the process runs
-            while True:
-                line = process.stdout.readline() if process.stdout else ""
-                if not line and process.poll() is not None:
-                    break
-                if line:
-                    sys.stdout.write(line)
-                    sys.stdout.flush()
-
-            # Wait for the official shutdown tracking loop to finish up
             returncode = process.wait()
 
         print("-" * 50)
@@ -73,26 +59,8 @@ def run(
         return returncode
 
     except Exception as e:
-        # Clean, isolated error block matching main.py structure
-        print("\n" + "=" * 50, file=sys.stderr)
-        print(f"SUBPROCESS EXECUTION ERROR: {e}", file=sys.stderr)
-        print("=" * 50 + "\n", file=sys.stderr)
+        print(
+            f"\n{'=' * 50}\nSUBPROCESS EXECUTION ERROR: {e}\n{'=' * 50}\n",
+            file=sys.stderr,
+        )
         raise
-
-
-if __name__ == "__main__":
-    print("--- Executing Standalone Diagnostic Test ---")
-
-    print("\n[Test 1] Running Python module version test...")
-    test_args_1 = ["pip", "--version"]
-    exit_code_1 = run(tool_args=test_args_1, mode="py")
-    print(f"Test 1 exited with code: {exit_code_1}")
-
-    print("\n[Test 2] Running native system continuous output test...")
-    import platform
-
-    ping_flag = "-n" if platform.system() == "Windows" else "-c"
-
-    test_args_2 = ["ping", ping_flag, "3", "127.0.0.1"]
-    exit_code_2 = run(tool_args=test_args_2, mode="run")
-    print(f"Test 2 exited with code: {exit_code_2}")

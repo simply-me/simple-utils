@@ -1,22 +1,23 @@
-"""Simplified Python CLI Application Launcher and Subprocess Router."""
+"""Simple Python CLI Application Launcher and Subprocess Router."""
 
 import sys
 import argparse
 from typing import List
 import cli_runner
+import intercepts
 
 
 def parse_launcher_mode(parser_args: List[str]) -> argparse.Namespace:
     """Parses only the initial routing command, leaving downstream flags untouched."""
     parser = argparse.ArgumentParser(
-        description="Simply: A minimal CLI launcher and subprocess router.",
+        description="simply: A minimal CLI launcher and subprocess router.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   simply run git status
   simply run pyftsubset --input font.ttf --output font-subset.ttf --unicodes=U+0020-007E
   simply py pymupdf --input document.pdf --output compressed.pdf
-  simply py pdf_optimizer --input document.pdf --output compressed.pdf
+  simply py pdf-compress --input document.pdf
 """,
     )
 
@@ -47,26 +48,32 @@ def main() -> None:
     if forwarded_args and forwarded_args[0] == "--":
         forwarded_args = forwarded_args[1:]
 
-    full_tool_command: List[str] = [parsed_config.target] + forwarded_args
-
-    # FIXED: Added clear vertical spacing before and after the status declaration
-    print()
-    print(f"Routing execution via mode: '{parsed_config.mode}'")
-    print("-" * 50)
-    print()
+    # Vertical spacing before and after the status declaration
+    print(f"\nRouting execution via mode: '{parsed_config.mode}'\n{'-' * 50}\n")
 
     try:
-        exit_code = cli_runner.run(tool_args=full_tool_command, mode=parsed_config.mode)
+        exit_code = 0
 
-        # Add a trailing newline before exiting so the command prompt isn't squashed
+        # Run custom intercepts; fall back to cli_runner if not intercepted
+        if not (
+            parsed_config.mode == "py"
+            and intercepts.handle_custom_intercept(
+                target=parsed_config.target, forwarded_args=forwarded_args
+            )
+        ):
+            full_tool_command: List[str] = [parsed_config.target] + forwarded_args
+            exit_code = cli_runner.run(
+                tool_args=full_tool_command, mode=parsed_config.mode
+            )
+
         print()
         sys.exit(exit_code)
 
     except Exception as e:
-        # High-visibility text error block with distinct padding boundaries
-        print("\n" + "=" * 50, file=sys.stderr)
-        print(f"CRITICAL ROUTER ERROR: {e}", file=sys.stderr)
-        print("=" * 50 + "\n", file=sys.stderr)
+        # High-visibility decoupled failure trace layout blocks
+        print(
+            f"\n{'=' * 50}\nCRITICAL ROUTER ERROR: {e}\n{'=' * 50}\n", file=sys.stderr
+        )
         sys.exit(1)
 
 
