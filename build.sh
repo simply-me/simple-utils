@@ -9,9 +9,9 @@ echo "                   Build in Progress"
 echo "============================================================"
 echo
 
-# 1. Reset and Stage inside the Build Directory
+# Reset and Stage inside the Build Directory
 echo
-echo "[1] Resetting build staging area..."
+echo "Resetting build staging area..."
 rm -rf build
 mkdir -p build/src
 
@@ -21,17 +21,17 @@ cp -r src/* build/src/
 find build/src/ -type d \( -name "__pycache__" -o -name ".venv" -o -name "venv" -o -name ".git" \) -exec rm -rf {} + 2>/dev/null || true
 find build/src/ -type f -name "*.pyc" -delete 2>/dev/null || true
 
-# 2. Create the Temporary Sandbox Virtual Environment
+# Create the Temporary Sandbox Virtual Environment
 echo
-echo "[2] Creating isolated build environment..."
+echo "Creating isolated build environment..."
 python -m venv build/.build_venv || {
     echo "[CRITICAL] Failed to create isolated virtual environment!"
     exit 1
 }
 
-# 3. Activation and Hydrate the Build Environment
+# Activation and Hydrate the Build Environment
 echo
-echo "[3] Activating clean sandbox environment..."
+echo "Activating clean sandbox environment..."
 # shellcheck disable=SC1091
 source build/.build_venv/Scripts/activate
 
@@ -45,21 +45,28 @@ fi
 pip install -r build/src/py_lib/requirements.txt --quiet
 
 # Temporarily install validation tools to the sandbox
-pip install pylint pytest pytest-cov --quiet
+echo "Installing verification and analysis framework dependencies..."
+pip install pylint pytest pytest-cov mypy --quiet
 
-# 4. Run Automated Testing Suite inside the Isolated Sandbox
+# Run Automated Testing Suite inside the Isolated Sandbox
 echo
-echo " Launching code tests and syntax verification..."
+echo "Launching code tests and syntax verification..."
 echo "------------------------------------------------------------"
 
 # Check syntax across all staged files using compileall
+echo "Checking fundamental syntax (Compileall)..."
 python -m compileall -q build/src/py_lib || {
     echo "[CRITICAL] Syntax validation failed inside pristine environment!"
     deactivate
     exit 1
 }
+echo "-> Syntax validation successful."
+echo
 
+# Run Pylint Check
+echo "------------------------------------------------------------"
 echo "Running structural quality checks (Pylint)..."
+echo "------------------------------------------------------------"
 # Clean, direct invocation
 python -m pylint src/py_lib test/ --rcfile=.pylintrc --output-format=colorized || PYLINT_ERROR=$?
 
@@ -86,7 +93,8 @@ if [ "$PYLINT_ERROR" -gt 0 ]; then
     read -r -p "Would you like to bypass these style warnings and complete the deployment anyway? (y/n): " CHOICE
     case "$CHOICE" in
         [yY][eE][sS]|[yY])
-            echo "Bypassing warnings. Proceeding to unit testing..."
+            echo "Bypassing warnings. Proceeding to type validation..."
+            echo
             ;;
         *)
             echo "Deployment aborted by user."
@@ -94,10 +102,33 @@ if [ "$PYLINT_ERROR" -gt 0 ]; then
             exit 1
             ;;
     esac
+else
+    # FIXED: Added clean confirmation block when Pylint yields an absolute zero error run
+    echo "-> Code style and structural checks successful."
+    echo
 fi
 
-# Added the Pytest automation phase directly into the sandbox verification pipeline
-echo "Running automated unit tests and tracking coverage..."
+# Run Mypy Check
+echo "------------------------------------------------------------"
+echo "Running strict type layout verification (Mypy)..."
+echo "------------------------------------------------------------"
+# Using --ignore-missing-imports to cleanly bypass missing type stubs for fitz (PyMuPDF)
+python -m mypy src/py_lib/ --ignore-missing-imports || MYPY_ERROR=$?
+
+MYPY_ERROR=${MYPY_ERROR:-0}
+if [ "$MYPY_ERROR" -gt 0 ]; then
+    echo
+    echo "[CRITICAL] Mypy detected strict type inconsistencies or logical data mismatches!"
+    deactivate
+    exit 1
+fi
+echo "-> Type layout verification successful."
+echo
+
+# Run Pytest Check
+echo "------------------------------------------------------------"
+echo "Running automated unit tests and tracking coverage (Pytest)..."
+echo "------------------------------------------------------------"
 python -m pytest || {
     echo
     echo "[CRITICAL] Automated unit tests failed inside pristine sandbox!"
@@ -108,9 +139,9 @@ python -m pytest || {
 echo "------------------------------------------------------------"
 echo "[✓] All validation tests completed successfully!"
 
-# 5. Deploy to Production (Dist Folder)
+# Deploy to Production (Dist Folder)
 echo
-echo "[5] Deploying validated artifacts to production folder..."
+echo "Deploying validated artifacts to production folder..."
 rm -rf dist
 mkdir -p dist/simple-utils
 
