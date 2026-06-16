@@ -58,3 +58,15 @@ def test_runner_raises_value_error_on_invalid_mode() -> None:
     """Asserts that passing unstructured engine targets triggers tracking blocks."""
     with pytest.raises(ValueError, match="Unsupported routing engine"):
         run(tool_args=["git"], mode="invalid_framework")
+
+
+def test_runner_raises_error_on_non_existent_executable(mock_popen: MagicMock) -> None:
+    """Verifies that running a non-existent binary raises a FileNotFoundError."""
+    # Simulate the OS throwing the missing file error
+    mock_popen.side_effect = FileNotFoundError(
+        "[WinError 2] The system cannot find the file specified"
+    )
+
+    # Assert that the application properly bubbles up or re-raises the exception
+    with pytest.raises(FileNotFoundError):
+        run(tool_args=["nosuchfile"], mode="run")
