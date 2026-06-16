@@ -3,12 +3,12 @@
 
 import sys
 from unittest.mock import patch
-import pytest
 
+import pytest
 from main import main
 
 
-def test_router_forwards_run_mode_correctly():
+def test_router_forwards_run_mode_correctly() -> None:
     """Verifies that 'simply run' paths map correctly to the runner module."""
     test_arguments = ["simply", "run", "git", "status", "--verbose"]
 
@@ -23,7 +23,7 @@ def test_router_forwards_run_mode_correctly():
             )
 
 
-def test_router_forwards_py_mode_correctly():
+def test_router_forwards_py_mode_correctly() -> None:
     """Verifies that 'simply py' paths map correctly to the runner module."""
     test_arguments = ["simply", "py", "pymupdf", "--input", "doc.pdf"]
 
@@ -38,7 +38,7 @@ def test_router_forwards_py_mode_correctly():
             )
 
 
-def test_router_strips_double_dash_separator():
+def test_router_strips_double_dash_separator() -> None:
     """Ensures downstream '--' barriers are safely popped before process execution."""
     test_arguments = ["simply", "run", "git", "--", "status"]
 
@@ -50,7 +50,7 @@ def test_router_strips_double_dash_separator():
             mock_runner.assert_called_once_with(tool_args=["git", "status"], mode="run")
 
 
-def test_router_rejects_unknown_modes(capsys):
+def test_router_rejects_unknown_modes(capsys: pytest.CaptureFixture[str]) -> None:
     """Verifies argparse cleanly blocks and flags invalid execution keywords."""
     test_arguments = ["simply", "invalid_mode", "git", "status"]
 
