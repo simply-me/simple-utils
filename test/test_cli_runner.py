@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name, duplicate-code
 """Automated verification suite for the subprocess tracking module."""
 
+import subprocess
 import sys
 from typing import Generator  # FIXED: Imported Generator to resolve F821
 from unittest.mock import MagicMock, patch
@@ -70,3 +71,18 @@ def test_runner_raises_error_on_non_existent_executable(mock_popen: MagicMock) -
     # Assert that the application properly bubbles up or re-raises the exception
     with pytest.raises(FileNotFoundError):
         run(tool_args=["nosuchfile"], mode="run")
+
+
+def test_runner_triggers_failed_returncode_branch(mock_popen: MagicMock) -> None:
+    """Forces execution into the 'if returncode != 0' block to verify error handling."""
+    # 1. Arrange: Force the mocked process to return a non-zero exit status (e.g., 1)
+    mock_process = mock_popen.return_value.__enter__.return_value
+    mock_process.wait.return_value = 1
+
+    # 2. Act & Assert: Verify it enters the branch and raises CalledProcessError
+    with pytest.raises(subprocess.CalledProcessError) as exc_info:
+        run(tool_args=["git", "status"], mode="run")
+
+    # 3. Verify the exception object holds the exact failure metadata from that block
+    assert exc_info.value.returncode == 1
+    assert exc_info.value.cmd == ["git", "status"]
