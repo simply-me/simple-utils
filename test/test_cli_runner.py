@@ -4,7 +4,6 @@
 import sys
 from unittest.mock import patch, MagicMock
 import pytest
-
 from cli_runner import run
 
 
@@ -14,9 +13,7 @@ def mock_popen():
     with patch("subprocess.Popen") as mock_context:
         mock_process = MagicMock()
         mock_process.__enter__.return_value = mock_process
-        mock_process.poll.return_value = 0
         mock_process.wait.return_value = 0
-        mock_process.stdout.readline.return_value = ""
         mock_context.return_value = mock_process
         yield mock_context
 
@@ -26,8 +23,9 @@ def test_runner_preserves_raw_run_commands(mock_popen):
     run(tool_args=["git", "status"], mode="run")
 
     mock_popen.assert_called_once()
-    called_args, _ = mock_popen.call_args
+    called_args, called_kwargs = mock_popen.call_args
     assert called_args == (["git", "status"],)
+    assert called_kwargs["stdout"] == sys.stdout
 
 
 def test_runner_prepends_python_environment_flags(mock_popen):
