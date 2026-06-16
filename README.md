@@ -6,33 +6,51 @@ not pollute the global python environment.
 
 ## List of Utilities Supported
 
-* **fonttools**
-* **PyMuPDF**
+The list of supported python packages can be seen and amended through
+the _py_lib\requirements.txt_ file.
 
-## Getting Started
+When changes are made to this file, run _setup_env.cmd_ to refresh the
+Python virtual environment.
+
+Additional commands supported through custom Python scripts:
+
+1. **pdf-compress _--input {input file}_**
+
+    Takes a pdf file and generates {filename}-compressed.pdf,
+    downsampling images to 150 DPI.
 
 ### Prerequisites
 
-Make sure you have Python installed.
+Make sure you have Python installed. Testing is done on Python 3.14.
 
-### Installation (TODO)
+### Installation
 
-Clone this repository to your local machine:
+1. Download the distribution package.
+1. Unzip it into your desired folder.
+1. Add the folder to your path.
 
-```bash
-git clone https://github.com
-cd YOUR-REPO-NAME
-```
+## Usage
 
-## Usage (TODO)
+Syntax:
 
-Here is a quick example of how to run the utilities:
+`simply {mode} {command} [arguments...]`
 
-```bash
-# Example command to run your utility
-[your-command-here, e.g., python rename_tool.py --dir ./images]
+supported modes:
+
+- run: use to run an executable
+- py: use to run a python module including the custom Python scripts
+
+>Note: Each custom python script uses its own predefined command.
+
+### Examples
+
+``` cmd
+  simply run git status
+  simply run pyftsubset --input font.ttf --output font-subset.ttf --unicodes=U+0020-007E
+  simply py pymupdf --input document.pdf --output compressed.pdf
+  simply py pdf-compress --input document.pdf
 ```
 
 ## License
 
-This software is provided AS-IS with no warranty, either express or implied.
+This project is licensed under the MIT License - see the [License](LICENSE) file.
