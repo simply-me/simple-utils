@@ -8,3 +8,6 @@ build/
 dist/
 output/
 .coverage
+
+# Block large test data files
+test/data/large*
