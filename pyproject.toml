@@ -19,5 +19,13 @@ exclude = '''
 [tool.pytest.ini_options]
 pythonpath = ["src/py_lib"]
 testpaths = ["test"]
-# Automatically tracks coverage for your core scripts and outputs the visual report
 addopts = "--cov=src/py_lib --cov-report=term-missing"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"               # Set this to your current starting version
+version_files = [
+    "pyproject.toml:version"     # Automatically updates the version string right here
+]
+update_changelog_on_bump = true
+tag_format = "v$version"

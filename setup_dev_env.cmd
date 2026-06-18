@@ -3,7 +3,7 @@ SETLOCAL EnableExtensions
 
 :: Create a clean development venv at the project root level
 echo Creating clean development virtual environment...
-py -m venv --clear.venv
+py -m venv --clear .venv
 if errorlevel 1 (
     echo [CRITICAL] Failed to create clean development virtual environment!
     pause
