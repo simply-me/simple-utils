@@ -1,6 +1,7 @@
 """Simple Python CLI Application Launcher and Subprocess Router."""
 
 import argparse
+import shlex
 import sys
 from typing import List
 
@@ -9,34 +10,14 @@ import intercepts
 
 
 def parse_launcher_mode(parser_args: List[str]) -> argparse.Namespace:
-    """Parses only the initial routing command, leaving downstream flags untouched.
-
-    :param parser_args: Pure command-line argument tokens.
-    :return: Parsed namespace housing mode, target, and trailing downstream stream arrays.
-    """
+    """Parses only the initial routing command, leaving downstream flags untouched."""
     parser = argparse.ArgumentParser(
         description="Simply: A minimal CLI launcher and subprocess router.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  simply run git status
-  simply run pyftsubset --input font.ttf --output font-subset.ttf --unicodes=U+0020-007E
-  simply py pymupdf --input document.pdf --output compressed.pdf
-  simply py pdf-compress document.pdf
-""",
     )
 
-    parser.add_argument(
-        "mode",
-        choices=["run", "py"],
-        help="Execution mode: 'run' for system binaries, 'py' for python modules.",
-    )
-
-    parser.add_argument(
-        "target",
-        type=str,
-        help="The name of the executable or Python module.",
-    )
+    parser.add_argument("mode", choices=["run", "py"])
+    parser.add_argument("target", type=str)
 
     parsed, remaining_args = parser.parse_known_args(parser_args)
     parsed.downstream_args = remaining_args
@@ -47,33 +28,41 @@ def main() -> None:
     """Main entry point for the simplified application launcher."""
     raw_args = sys.argv[1:]
 
-    parsed_config = parse_launcher_mode(raw_args)
+    # Unpack the single packed macro string passed by the Windows CMD wrapper
+    if len(raw_args) == 1:
+        forwarded_tokens = shlex.split(raw_args[0])
+    else:
+        forwarded_tokens = raw_args
 
+    if not forwarded_tokens:
+        print(
+            "[ERROR] No execution parameters reached the core engine.", file=sys.stderr
+        )
+        sys.exit(2)
+
+    parsed_config = parse_launcher_mode(forwarded_tokens)
     forwarded_args = parsed_config.downstream_args
-    if forwarded_args and forwarded_args == "--":
-        forwarded_args = forwarded_args[1:]
 
     print(f"\nRouting execution via mode: '{parsed_config.mode}'\n{'-' * 50}\n")
 
     try:
-        exit_code = 0
-
-        # Run custom intercepts; fall back to cli_runner if not intercepted
-        if not (
-            parsed_config.mode == "py"
-            and intercepts.handle_custom_intercept(
-                target=parsed_config.target, forwarded_args=forwarded_args
-            )
+        # Run custom intercepts first
+        if parsed_config.mode == "py" and intercepts.handle_custom_intercept(
+            target=parsed_config.target, forwarded_args=forwarded_args
         ):
+            exit_code = 0
+        else:
             full_tool_command: List[str] = [parsed_config.target] + forwarded_args
             exit_code = cli_runner.run(
                 tool_args=full_tool_command, mode=parsed_config.mode
             )
 
         print()
+        # Cleanly bubble the exact downstream tool code without extra router text
         sys.exit(exit_code)
 
     except Exception as e:
+        # Keep this only for unexpected crashes in python itself (e.g. system files missing)
         print(
             f"\n{'=' * 50}\nCRITICAL ROUTER ERROR: {e}\n{'=' * 50}\n", file=sys.stderr
         )
