@@ -1,0 +1,17 @@
+name: Purge Sandbox Testing Drafts
+
+on:
+  workflow_dispatch:
+
+jobs:
+  purge-drafts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      # Automatically sweeps away drafts directly via the GitHub API
+      - name: Delete all draft releases
+        uses: hugo19941994/delete-draft-releases@v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
