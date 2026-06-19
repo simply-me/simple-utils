@@ -1,46 +1,89 @@
-name: Release Python Assets
+name: Validate, Build, and Release Assets
 
 on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: # Allows manual button clicks for sandbox testing
+  workflow_dispatch:
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to create releases and upload files
+      contents: write
 
     steps:
       - name: Check out code
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.14'
+          cache: 'pip'
+          cache-dependency-path: 'src/py_lib/requirements.txt'
 
-      # Executes your local build script to compile the dist/ directory
-      - name: Run local build script
-        env:
-          TERM: dumb # Provide a dummy terminal
+      - name: Install dependencies
         run: |
-          chmod +x ./build.sh
-          ./build.sh
+          python -m pip install --upgrade pip --quiet
+          pip install -r src/py_lib/requirements.txt --quiet
+          pip install pylint pytest pytest-cov mypy --quiet
 
-      # Creates the release and uploads your assets
+      - name: Stage source code for clean validation
+        run: |
+          rm -rf build
+          mkdir -p build/src
+          cp -r src/* build/src/
+
+          # Scrub any pre-existing caches carried over from checkout as precaution
+          find build/src/ -type d \( -name "__pycache__" -o -name ".venv" -o -name "venv" \) -exec rm -rf {} + 2>/dev/null || true
+          find build/src/ -type f -name "*.pyc" -delete 2>/dev/null || true
+
+      - name: Run Fundamental Syntax Check (Compileall)
+        run: python -m compileall -q build/src/py_lib
+
+      - name: Run Structural Quality Checks (Pylint)
+        run: |
+          PYLINT_ERROR=0
+          python -m pylint build/src/py_lib test/ --rcfile=.pylintrc || PYLINT_ERROR=$?
+          HARD_FAILURES=$(( PYLINT_ERROR & 35 ))
+          if [ "$HARD_FAILURES" -gt 0 ]; then
+              echo "[CRITICAL] Pylint detected blocking Errors or Fatal syntax crashes!"
+              exit 1
+          fi
+          echo "Pylint passed hard failure checks. Bypassing style warnings for automated runner."
+
+      - name: Run Type Layout Verification (Mypy)
+        run: python -m mypy build/src/py_lib/ --ignore-missing-imports
+
+      - name: Run Unit Tests and Track Coverage (Pytest)
+        run: python -m pytest
+        env:
+          PYTHONPATH: "build/src/py_lib" # Forces pytest to test the build folder modules
+
+      # Assembles the validated code from build/ into dist/
+      - name: Package application into ZIP archive
+        run: |
+          rm -rf dist
+          mkdir -p dist/simple-utils
+
+          # Copy strictly from your validated build sandbox
+          cp -r build/src/* dist/simple-utils/
+
+          # Perform the final package scrub to remove runtime test caches
+          find dist/simple-utils/ -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+          find dist/simple-utils/ -type f -name "*.pyc" -delete 2>/dev/null || true
+
+          cd dist
+          python -c "import shutil; shutil.make_archive('simple-utils', 'zip', 'simple-utils')"
+
+      # 7. Upload the final zip file directly to your GitHub Release assets matrix
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v3
         with:
-          # Automatically switches between your real tag name or a unique test tag name
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v0.1.0-test-{0}', github.run_number) }}
-          files: dist/*
+          files: dist/simple-utils.zip
           generate_release_notes: true
-
-          # DYNAMIC DRAFT LOGIC:
-          # Evaluates to true if you clicked the manual button. Evaluates to false if a real tag was pushed.
           draft: ${{ github.event_name == 'workflow_dispatch' }}
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
