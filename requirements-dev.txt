@@ -1,6 +1,6 @@
 -r src/py_lib/requirements.txt
 pre-commit
-pylint
 pytest
 pytest-cov
 commitizen
+ruff

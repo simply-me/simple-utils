@@ -10,7 +10,7 @@ def route_pdf_compress(forwarded_args: List[str]) -> None:
     :param forwarded_args: Raw arguments forwarded down from the main CLI router.
     """
     # pylint: disable=import-outside-toplevel
-    import pdf_optimizer
+    import pdf_optimizer  # noqa: PLC0415
 
     # High-performance sub-parser accepting a single positional file argument
     parser = argparse.ArgumentParser(add_help=False)

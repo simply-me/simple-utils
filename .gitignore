@@ -4,6 +4,11 @@
 # Block temporary pipeline caches and folders
 __pycache__/
 .cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.pytest_cache/
+.ruff_cache/
 build/
 dist/
 output/

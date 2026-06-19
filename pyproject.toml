@@ -1,5 +1,5 @@
 [tool.black]
-line-length = 88
+line-length = 120
 exclude = '''
 (
     /(
@@ -21,6 +21,12 @@ pythonpath = ["src/py_lib"]
 testpaths = ["test"]
 addopts = "--cov=src/py_lib --cov-report=term-missing"
 
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:"
+]
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.0.0"               # Set this to your current starting version
@@ -29,3 +35,28 @@ version_files = [
 ]
 update_changelog_on_bump = true
 tag_format = "v$version"
+
+[tool.ruff]
+# Matches your exact tool.black line-length rule
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+# E/W = Pycodestyle (Flake8 replacement)
+# F   = Pyflakes (Flake8 critical errors)
+# I   = Isort (Automatic import sorting)
+# PL  = Pylint emulation rules
+select = ["E", "W", "F", "I", "PL"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# Do not track magic numbers (PLR2004) inside any files under the test directory
+[tool.ruff.lint.per-file-ignores]
+"test/**/*.py" = ["PLR2004"]
+
+[tool.mypy]
+python_version = "3.14"         # Forces Mypy to parse syntax matching Python 3.14 rules
+ignore_missing_imports = true   # Cleans out the args line from pre-commit

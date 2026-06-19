@@ -61,7 +61,7 @@ repos:
         types_or: [css, html, json, javascript, jsx, ts, tsx, vue]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v9.39.0 # 2025-11-01
+    rev: v9.39.0  # 2025-11-01
     hooks:
       - id: eslint
         types_or: [javascript, jsx, ts, tsx, vue]
@@ -75,7 +75,7 @@ repos:
           - '@typescript-eslint/parser@^8.0.0'
           - typescript@~4.7.4
           - eslint-config-prettier@^9.1.0
-          - globals@^16.5.0 # 2025-11-01
+          - globals@^16.5.0  # 2025-11-01
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.36.0  ## 2025-12-15
@@ -149,38 +149,15 @@ repos:
   #       entry: sqlfluff fix --dialect tsql
   #       types: [sql]
 
-  # Pre-commit code formatter hook for python
-  - repo: https://github.com/psf/black
-    rev: 25.12.0  # 2025-12-08
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.17  # 2026-06-11
     hooks:
-      - id: black
-        args: [--line-length=88]
+      - id: ruff-check
+        args: [--fix]  # Automatically repairs styling bugs and sorts imports natively
+      - id: ruff-format
 
-  # Pre-commit hook for python for styleguide enforcement
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.3.0  # 2025-06-21
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0  # 2026-02-11
     hooks:
-      - id: flake8
-        additional_dependencies:
-          - flake8-docstrings  # Optional: adds pydocstyle checks
-          - flake8-bugbear     # Optional: adds various checks for likely bugs
-        args:
-          - --max-line-length=88  # Match Black's line length
-          - --extend-ignore=E203  # Ignore whitespace before ':' (Black formats differently)
-          - --extend-ignore=E501  # Let Black handle line length
-          - --disable-noqa # disallow checks using noqa
-        exclude: '^(venv/|env/)'
-
-  # Pre-commit hook to add static code analyser for python.
-  # Use pylint installed on your machine
-  - repo: local
-    hooks:
-    - id: pylint
-      name: pylint
-      entry: pylint
-      language: system
-      types: [python]
-      args:
-        - --rcfile=.pylintrc
-        - --output-format=colorized
-      require_serial: true
+      - id: mypy
+        args: []  # Automatically inherits settings from your pyproject.toml
