@@ -1,20 +1,6 @@
-[tool.black]
-line-length = 120
-exclude = '''
-(
-    /(
-        \.git
-        | \.hg
-        | \.mypy_cache
-        | \.tox
-        | \.venv
-        | _build
-        | buck-out
-        | build
-        | dist
-    )/
-)
-'''
+# ==============================================================================
+# 🧪 TESTING & CODE COVERAGE
+# ==============================================================================
 
 [tool.pytest.ini_options]
 pythonpath = ["src/py_lib"]
@@ -27,36 +13,40 @@ exclude_lines = [
     "if __name__ == .__main__.:"
 ]
 
-[tool.commitizen]
-name = "cz_conventional_commits"
-version = "0.0.0"               # Set this to your current starting version
-version_files = [
-    "pyproject.toml:version"     # Automatically updates the version string right here
-]
-update_changelog_on_bump = true
-tag_format = "v$version"
+# ==============================================================================
+# 🦀 CODE QUALITY, LINTING & STATIC ANALYSIS (RUFF + MYPY)
+# ==============================================================================
 
 [tool.ruff]
-# Matches your exact tool.black line-length rule
 line-length = 120
 target-version = "py314"
 
 [tool.ruff.lint]
-# E/W = Pycodestyle (Flake8 replacement)
-# F   = Pyflakes (Flake8 critical errors)
-# I   = Isort (Automatic import sorting)
-# PL  = Pylint emulation rules
+# E/W = Pycodestyle (Flake8), F = Pyflakes (Errors), I = Isort, PL = Pylint
 select = ["E", "W", "F", "I", "PL"]
-ignore = []
+ignore = ["PLC0415"]  # Allows local optimization imports inside functions globally
+
+[tool.ruff.lint.per-file-ignores]
+"test/**/*.py" = ["PLR2004"]  # Bypasses "magic numbers" warning inside unit testing files
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 
-# Do not track magic numbers (PLR2004) inside any files under the test directory
-[tool.ruff.lint.per-file-ignores]
-"test/**/*.py" = ["PLR2004"]
-
 [tool.mypy]
-python_version = "3.14"         # Forces Mypy to parse syntax matching Python 3.14 rules
-ignore_missing_imports = true   # Cleans out the args line from pre-commit
+python_version = "3.14"
+ignore_missing_imports = true
+
+# ==============================================================================
+# 📦 PROJECT MANAGEMENT & AUTOMATED RELEASES
+# ==============================================================================
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.0.0"
+update_changelog_on_bump = true
+tag_format = "v$version"
+major_version_zero = true  # Guarantees breaking changes bump minor instead of v1.0.0
+version_files = [
+    "pyproject.toml:version"
+]
