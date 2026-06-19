@@ -30,7 +30,7 @@ def run(
     if mode == "py":
         if tool_args[0].lower() in ["python", "python3"]:
             tool_args = tool_args[1:]
-        if tool_args[0] == "-m":
+        if tool_args and tool_args[0] == "-m":
             tool_args = tool_args[1:]
         full_command = [sys.executable, "-m"] + tool_args
     else:
@@ -39,29 +39,21 @@ def run(
     # Clean header with unified divider widths
     print(f"Running command: {' '.join(full_command)}\n{'-' * 50}")
 
-    try:
-        # Piping directly to sys.stdout lets the OS engine handle stream rendering at maximum speed.
-        with subprocess.Popen(
-            full_command,
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-            cwd=working_dir,
-            env=custom_env,
-        ) as process:
-            returncode = process.wait()
+    # Piping directly to sys.stdout lets the OS engine handle stream rendering at maximum speed.
+    with subprocess.Popen(
+        full_command,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+        cwd=working_dir,
+        env=custom_env,
+    ) as process:
+        returncode = process.wait()
 
-        print("-" * 50)
+    print("-" * 50)
 
-        if returncode != 0:
-            print(f"Process failed with exit code: {returncode}", file=sys.stderr)
-            raise subprocess.CalledProcessError(returncode, full_command)
-
+    if returncode != 0:
+        print(f"Process failed with exit code: {returncode}", file=sys.stderr)
+    else:
         print("Process completed successfully.")
-        return returncode
 
-    except Exception as e:
-        print(
-            f"\n{'=' * 50}\nSUBPROCESS EXECUTION ERROR: {e}\n{'=' * 50}\n",
-            file=sys.stderr,
-        )
-        raise
+    return returncode
