@@ -1,0 +1,44 @@
+name: Release Python Assets
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: # Allows manual button clicks for sandbox testing
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create releases and upload files
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      # Executes your local build script to compile the dist/ directory
+      - name: Run local build script
+        run: |
+          chmod +x ./build.sh
+          ./build.sh
+
+      # Creates the release and uploads your assets
+      - name: Create GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          # Automatically switches between your real tag name or a unique test tag name
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v0.1.0-test-{0}', github.run_number) }}
+          files: dist/*
+          generate_release_notes: true
+
+          # DYNAMIC DRAFT LOGIC:
+          # Evaluates to true if you clicked the manual button. Evaluates to false if a real tag was pushed.
+          draft: ${{ github.event_name == 'workflow_dispatch' }}
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
