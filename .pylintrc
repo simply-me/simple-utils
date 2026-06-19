@@ -1,7 +1,12 @@
 [MASTER]
-ignore=CVS,.git,venv,env,alembic,setup.py
+# 1. Base Name Ignore: Skips folders named exactly like this during recursive crawling
+ignore=CVS,.git,venv,env,.venv,alembic,setup.py,build
+
+# 2. Strict Path Regex Ignore: Blocks the root environment, src environment, and build environment completely
+ignore-paths=^\.venv/.*,^src/py-lib/\.venv/.*,^build/\.venv/.*,^build/.*
+
 # Automatically injects your library path for pre-commit, build.sh, and IDE extensions
-init-hook="import sys; sys.path.insert(0, 'src/py_lib')"
+init-hook="import sys; sys.path.insert(0, 'src/py-lib')"
 
 [FORMAT]
 max-line-length=110
