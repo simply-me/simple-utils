@@ -6,6 +6,7 @@ PDF metadata, fonts, and heavy embedded asset streams safely.
 
 import sys
 from pathlib import Path
+
 import fitz  # PyMuPDF
 
 
@@ -16,9 +17,7 @@ def print_progress(current: int, total: int, prefix: str = "Processing") -> None
     filled_length = int(bar_length * current // total)
     progress_bar = "#" * filled_length + "-" * (bar_length - filled_length)
 
-    sys.stdout.write(
-        f"\r{prefix}: |{progress_bar}| {percent:.1f}% ({current}/{total} pages)"
-    )
+    sys.stdout.write(f"\r{prefix}: |{progress_bar}| {percent:.1f}% ({current}/{total} pages)")
     sys.stdout.flush()
 
 
@@ -72,7 +71,7 @@ def run(pdf_path: str) -> None:
     saved_mbs = saved_bytes / (1024 * 1024)
     saved_pct = (saved_bytes / orig_bytes) * 100 if orig_bytes > 0 else 0.0
 
-    print(f"{'-' * 50}\n" f"Optimization execution finalized.")
+    print(f"{'-' * 50}\nOptimization execution finalized.")
     print(f"Output saved to: {dest.name}")
     print(f"Original Size:   {orig_mbs:.2f} MB")
     print(f"Optimized Size:  {new_mbs:.2f} MB")

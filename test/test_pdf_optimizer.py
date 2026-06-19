@@ -2,6 +2,7 @@
 """Automated verification suite for the PDF compression engine."""
 
 from pathlib import Path
+
 import pytest
 from pdf_optimizer import print_progress, run
 

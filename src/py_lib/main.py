@@ -35,9 +35,7 @@ def main() -> None:
         forwarded_tokens = raw_args
 
     if not forwarded_tokens:
-        print(
-            "[ERROR] No execution parameters reached the core engine.", file=sys.stderr
-        )
+        print("[ERROR] No execution parameters reached the core engine.", file=sys.stderr)
         sys.exit(2)
 
     parsed_config = parse_launcher_mode(forwarded_tokens)
@@ -53,9 +51,7 @@ def main() -> None:
             exit_code = 0
         else:
             full_tool_command: List[str] = [parsed_config.target] + forwarded_args
-            exit_code = cli_runner.run(
-                tool_args=full_tool_command, mode=parsed_config.mode
-            )
+            exit_code = cli_runner.run(tool_args=full_tool_command, mode=parsed_config.mode)
 
         print()
         # Cleanly bubble the exact downstream tool code without extra router text
@@ -63,9 +59,7 @@ def main() -> None:
 
     except Exception as e:
         # Keep this only for unexpected crashes in python itself (e.g. system files missing)
-        print(
-            f"\n{'=' * 50}\nCRITICAL ROUTER ERROR: {e}\n{'=' * 50}\n", file=sys.stderr
-        )
+        print(f"\n{'=' * 50}\nCRITICAL ROUTER ERROR: {e}\n{'=' * 50}\n", file=sys.stderr)
         sys.exit(1)
 
 

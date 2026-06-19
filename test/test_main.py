@@ -18,9 +18,7 @@ def test_router_forwards_run_mode_correctly() -> None:
                 main()
 
             assert exit_wrapper.value.code == 0
-            mock_runner.assert_called_once_with(
-                tool_args=["git", "status", "--verbose"], mode="run"
-            )
+            mock_runner.assert_called_once_with(tool_args=["git", "status", "--verbose"], mode="run")
 
 
 def test_router_handles_double_dash_separator() -> None:
@@ -66,9 +64,7 @@ def test_router_traps_defensive_empty_tokenization_failure(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Covers lines 35 & 38-39 by passing white spaces that shlex unpacks to an empty list."""
-    test_arguments = [
-        "   "
-    ]  # Splitting empty spacing results in token array length zero
+    test_arguments = ["   "]  # Splitting empty spacing results in token array length zero
 
     with patch.object(sys, "argv", ["main.py"] + test_arguments):
         with pytest.raises(SystemExit) as exit_wrapper:
@@ -100,9 +96,7 @@ def test_router_successful_intercept_bypass() -> None:
     # This mimics a packed string coming from the Windows launcher wrapper
     test_arguments = ["py custom_intercepted_tool --flag"]
 
-    with patch(
-        "main.intercepts.handle_custom_intercept", return_value=True
-    ) as mock_intercept:
+    with patch("main.intercepts.handle_custom_intercept", return_value=True) as mock_intercept:
         with patch("main.cli_runner.run") as mock_runner:
             with patch.object(sys, "argv", ["main.py"] + test_arguments):
                 with pytest.raises(SystemExit) as exit_wrapper:
@@ -110,7 +104,5 @@ def test_router_successful_intercept_bypass() -> None:
 
                 # Confirms it enters the True condition (Line 50) and exits cleanly
                 assert exit_wrapper.value.code == 0
-                mock_intercept.assert_called_once_with(
-                    target="custom_intercepted_tool", forwarded_args=["--flag"]
-                )
+                mock_intercept.assert_called_once_with(target="custom_intercepted_tool", forwarded_args=["--flag"])
                 mock_runner.assert_not_called()
