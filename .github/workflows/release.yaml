@@ -56,17 +56,26 @@ jobs:
       - name: Run Unit Tests and Track Coverage (Pytest)
         run: python -m pytest -o pythonpath="build/src/py_lib"
 
+      # 6. Deploy to clean production folder and Package
       - name: Package application into ZIP archive
         run: |
           rm -rf dist
           mkdir -p dist/simple-utils
+
+          # Copy strictly from your validated build sandbox
           cp -r build/src/* dist/simple-utils/
+
+          # Safely package your Commitizen changelog inside the zip
+          cp -f CHANGELOG.md dist/simple-utils/ 2>/dev/null || true
+
+          # Perform the final package scrub to remove runtime test caches
           find dist/simple-utils/ -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
           find dist/simple-utils/ -type f -name "*.pyc" -delete 2>/dev/null || true
+
           cd dist
           python -c "import shutil; shutil.make_archive('simple-utils', 'zip', 'simple-utils')"
 
-      # Compiles unique draft tags for manual testing, or publish releases for true tags
+      # Upload the final zip file directly to your GitHub Release assets matrix
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v3
         with:
