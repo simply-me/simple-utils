@@ -1,4 +1,11 @@
-## Unreleased
+## v0.2.0 (2026-06-19)
+
+### Feat
+
+- removed redundant error messages
+- changed the way arguments are passed through
+
+## v0.1.0 (2026-06-19)
 
 ### Feat
 
