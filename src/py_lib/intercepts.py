@@ -1,4 +1,5 @@
 """Registry and router for internal custom Python extensions."""
+# ruff: noqa: PLC0415
 
 import argparse
 from typing import Callable, Dict, List
@@ -10,7 +11,7 @@ def route_pdf_compress(forwarded_args: List[str]) -> None:
     :param forwarded_args: Raw arguments forwarded down from the main CLI router.
     """
     # pylint: disable=import-outside-toplevel
-    import pdf_optimizer  # noqa: PLC0415
+    import pdf_optimizer
 
     # High-performance sub-parser accepting a single positional file argument
     parser = argparse.ArgumentParser(add_help=False)

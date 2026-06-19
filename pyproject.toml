@@ -24,7 +24,6 @@ target-version = "py314"
 [tool.ruff.lint]
 # E/W = Pycodestyle (Flake8), F = Pyflakes (Errors), I = Isort, PL = Pylint
 select = ["E", "W", "F", "I", "PL"]
-ignore = ["PLC0415"]  # Allows local optimization imports inside functions globally
 
 [tool.ruff.lint.per-file-ignores]
 "test/**/*.py" = ["PLR2004"]  # Bypasses "magic numbers" warning inside unit testing files
