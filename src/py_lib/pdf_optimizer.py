@@ -43,7 +43,7 @@ def run(pdf_path: str) -> None:
     for index, page in enumerate(doc, start=1):
         try:
             page.clean_contents()
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:  # pragma: no cover
             pass
         print_progress(index, total_pages, prefix="Compiling Layout")
 
