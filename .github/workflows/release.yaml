@@ -4,13 +4,13 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual trigger button for safe sandbox testing
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Essential to authorize uploading files to GitHub Releases
+      contents: write  # Authorizes the worker to push assets to GitHub Releases
 
     steps:
       - name: Check out code
@@ -23,13 +23,14 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'src/py_lib/requirements.txt'
 
-      # Quiet flags prevent output cluttering
+      # Quiet flags matching your build.sh settings to keep logs un-cluttered
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip --quiet
           pip install -r src/py_lib/requirements.txt --quiet
-          pip install pylint pytest pytest-cov mypy --quiet
+          pip install ruff pytest pytest-cov mypy --quiet
 
+      # Replicates your local staging sandbox environment exactly
       - name: Stage source code for clean validation
         run: |
           mkdir -p build/src
@@ -38,25 +39,23 @@ jobs:
       - name: Run Fundamental Syntax Check (Compileall)
         run: python -m compileall -q build/src/py_lib
 
-      - name: Run Structural Quality Checks (Pylint)
-        run: |
-          PYLINT_ERROR=0
-          python -m pylint build/src/py_lib --rcfile=.pylintrc || PYLINT_ERROR=$?
-          HARD_FAILURES=$(( PYLINT_ERROR & 35 ))
-          if [ "$HARD_FAILURES" -gt 0 ]; then
-              echo "[CRITICAL] Pylint detected blocking Errors or Fatal syntax crashes!"
-              exit 1
-          fi
-          echo "Pylint passed hard failure checks. Bypassing style warnings for automated runner."
+      # Ruff syntax checks
+      - name: Run Code Quality Linting (Ruff Check)
+        run: ruff check build/src/py_lib
 
+      # Verifies code formatting layouts match your 120-character rules
+      - name: Verify Code Styling Formatting (Ruff Format)
+        run: ruff format --check build/src/py_lib
+
+      # Runs Mypy directly on your staged build sandbox target paths
       - name: Run Type Layout Verification (Mypy)
-        run: python -m mypy build/src/py_lib/ --ignore-missing-imports
+        run: python -m mypy build/src/py_lib/
 
-      # Crucial path correction: Overrides pyproject.toml paths to use the build directory
+      # Runs your tests against the isolated staging modules
       - name: Run Unit Tests and Track Coverage (Pytest)
         run: python -m pytest -o pythonpath="build/src/py_lib"
 
-      # 6. Deploy to clean production folder and Package
+      # Packages everything cleanly and injects the Commitizen CHANGELOG.md file
       - name: Package application into ZIP archive
         run: |
           rm -rf dist
@@ -65,7 +64,7 @@ jobs:
           # Copy strictly from your validated build sandbox
           cp -r build/src/* dist/simple-utils/
 
-          # Safely package your Commitizen changelog inside the zip
+          # Safely package your local Commitizen changelog documentation inside the zip
           cp -f CHANGELOG.md dist/simple-utils/ 2>/dev/null || true
 
           # Perform the final package scrub to remove runtime test caches
