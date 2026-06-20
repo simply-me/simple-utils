@@ -59,11 +59,11 @@ jobs:
           # Step 1: Validate sandbox path ordering using empty config file overrides
           python -m pytest -c /dev/null -p no:cacheprovider -k "test_verify_imports_are_sandboxed" -x
 
-          # Step 2: Run tests, outputting both terminal results and an injection-ready markdown report
+          # Step 2: Run tests, explicitly specifying the filename parameter for the markdown output
           python -m pytest -c /dev/null -p no:cacheprovider -k "not test_verify_imports_are_sandboxed" \
             --cov="build/src/py_lib" \
             --cov-report=term-missing \
-            --cov-report=markdown \
+            --cov-report=markdown:pytest_coverage.md \
             -v
 
           # Step 3: Append the generated report into GitHub's dashboard summary tracker
