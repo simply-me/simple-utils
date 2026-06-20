@@ -25,9 +25,9 @@ def setup_script_path() -> str:
     """Dynamically resolves the path to the environment setup script based on PYTHONPATH."""
     # Matches the exact approach used across your other integration tests
     if "build" in os.environ.get("PYTHONPATH", ""):
-        return os.path.join("build", "src", "setup_env.cmd")  # Adjust filename if yours is .bat
+        return os.path.join("build", "src", "simply_env.cmd")  # Adjust filename if yours is .bat
 
-    return os.path.join("src", "setup_env.cmd")
+    return os.path.join("src", "simply_env.cmd")
 
 
 def test_setup_script_fails_on_invalid_arguments(workspace_root: str, setup_script_path: str) -> None:
