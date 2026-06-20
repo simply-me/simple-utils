@@ -2,7 +2,14 @@
   // configure rules: all defaulted to true
   // https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
   "config": {
-    "default": true
+    "default": true,
+    "MD013": {
+      "line_length": 120,
+      "code_blocks": false,
+      "tables": false,
+      "headings": false,
+      "images": false
+    }
   },
 
   // Include a custom rule package
