@@ -42,7 +42,7 @@ ignore_missing_imports = true
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.2.0"
+version = "0.3.0"
 update_changelog_on_bump = true
 tag_format = "v$version"
 major_version_zero = true  # Guarantees breaking changes bump minor instead of v1.0.0

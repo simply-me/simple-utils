@@ -1,3 +1,14 @@
+## v0.3.0 (2026-06-20)
+
+### Feat
+
+- renamed setup_env.cmd to simply_env.cmd
+- add update support to setup_env.cmd
+
+### Fix
+
+- changed the simply.cmd to call simply_env.cmd
+
 ## v0.2.0 (2026-06-19)
 
 ### Feat
