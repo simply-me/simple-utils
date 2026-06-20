@@ -5,7 +5,7 @@ set -euo pipefail
 
 clear
 echo "============================================================"
-echo "          Strategy A Build in Progress (Ruff + Mypy)"
+echo "          Build in Progress"
 echo "============================================================"
 echo
 
@@ -100,10 +100,20 @@ echo
 
 # Run Pytest Check
 echo "------------------------------------------------------------"
-echo "Running automated unit tests and tracking coverage (Pytest)..."
+echo "Running unit tests and tracking coverage (Pytest)..."
 echo "------------------------------------------------------------"
-export PYTHONPATH="build/src"
-python -m pytest || {
+export PYTHONPATH="build/src/py_lib"
+
+# Run ONLY the sandbox check. -p no:cacheprovider prevents the WinError 87 warning on Windows.
+python -m pytest -c /dev/null -p no:cacheprovider -k "test_verify_imports_are_sandboxed" -x || {
+    echo
+    echo "[CRITICAL] Sandbox validation failed! Tests are hitting wrong source paths."
+    deactivate 2>/dev/null || true
+    exit 1
+}
+
+# Run everything else out of the sandbox safely.
+python -m pytest -c /dev/null -p no:cacheprovider -k "not test_verify_imports_are_sandboxed" || {
     echo
     echo "[CRITICAL] Automated unit tests failed inside pristine sandbox!"
     deactivate 2>/dev/null || true
@@ -148,7 +158,7 @@ rm -rf build/.build_venv
 
 echo
 echo "============================================================"
-echo " BUILD SUCCESSFUL! Clean production zip ready in dist/simple-utils.zip"
+echo " BUILD SUCCESSFUL! Production zip in dist/simple-utils.zip"
 echo "============================================================"
 echo
 exit 0
