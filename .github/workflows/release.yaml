@@ -51,16 +51,27 @@ jobs:
       - name: Run Type Layout Verification (Mypy)
         run: python -m mypy build/src/py_lib/
 
-      # Runs your tests against the isolated staging modules while forcing config and cache bypass
+      # Runs your tests against the isolated staging modules with summary markdown tracking
       - name: Run Unit Tests and Track Coverage (Pytest)
         env:
-          PYTHONPATH: build/src/py_lib  # <-- This natively injects the environment variable
+          PYTHONPATH: build/src/py_lib
         run: |
-          # Step 1: Validate sandbox path ordering with empty configs and no cacheprovider
+          # Step 1: Validate sandbox path ordering using empty config file overrides
           python -m pytest -c /dev/null -p no:cacheprovider -k "test_verify_imports_are_sandboxed" -x
 
-          # Step 2: Run all remaining unit tests safely (including your simply.cmd test file)
-          python -m pytest -c /dev/null -p no:cacheprovider -k "not test_verify_imports_are_sandboxed"
+          # Step 2: Run tests, outputting both terminal results and an injection-ready markdown report
+          python -m pytest -c /dev/null -p no:cacheprovider -k "not test_verify_imports_are_sandboxed" \
+            --cov="build/src/py_lib" \
+            --cov-report=term-missing \
+            --cov-report=markdown \
+            -v
+
+          # Step 3: Append the generated report into GitHub's dashboard summary tracker
+          if [ -f "pytest_coverage.md" ]; then
+              echo "### 📊 Automated Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+              cat pytest_coverage.md >> $GITHUB_STEP_SUMMARY
+          fi
+
 
       # Packages everything cleanly and injects the Commitizen CHANGELOG.md file
       - name: Package application into ZIP archive
