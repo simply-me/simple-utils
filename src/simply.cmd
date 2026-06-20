@@ -17,10 +17,10 @@ pushd "%~dp0"
 :: 2. Auto-Bootstrap Check
 if not exist "py_lib\.venv" (
     echo [Launcher] Environment missing. Initializing production setup...
-    if exist "setup_env.cmd" (
-        call "setup_env.cmd"
+    if exist "simply_env.cmd" (
+        call "simply_env.cmd"
     ) else (
-        echo [ERROR] setup_env.cmd is missing from src folder! Cannot initialize.
+        echo [ERROR] simply_env.cmd is missing from src folder! Cannot initialize.
         popd
         pause
         exit /b 1
