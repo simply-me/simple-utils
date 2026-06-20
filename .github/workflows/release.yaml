@@ -51,9 +51,16 @@ jobs:
       - name: Run Type Layout Verification (Mypy)
         run: python -m mypy build/src/py_lib/
 
-      # Runs your tests against the isolated staging modules
+      # Runs your tests against the isolated staging modules while forcing config and cache bypass
       - name: Run Unit Tests and Track Coverage (Pytest)
-        run: python -m pytest -o pythonpath="build/src/py_lib"
+        env:
+          PYTHONPATH: build/src/py_lib  # <-- This natively injects the environment variable
+        run: |
+          # Step 1: Validate sandbox path ordering with empty configs and no cacheprovider
+          python -m pytest -c /dev/null -p no:cacheprovider -k "test_verify_imports_are_sandboxed" -x
+
+          # Step 2: Run all remaining unit tests safely (including your simply.cmd test file)
+          python -m pytest -c /dev/null -p no:cacheprovider -k "not test_verify_imports_are_sandboxed"
 
       # Packages everything cleanly and injects the Commitizen CHANGELOG.md file
       - name: Package application into ZIP archive
