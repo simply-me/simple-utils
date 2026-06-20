@@ -1,4 +1,3 @@
-# pylint: disable=redefined-outer-name, duplicate-code
 """Automated verification suite for the subprocess tracking module."""
 
 import sys

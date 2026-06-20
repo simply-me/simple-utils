@@ -1,4 +1,3 @@
-# pylint: disable=redefined-outer-name
 """Integration test suite targeting the Windows batch launcher wrapper."""
 
 import os

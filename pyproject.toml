@@ -26,7 +26,7 @@ target-version = "py314"
 select = ["E", "W", "F", "I", "PL"]
 
 [tool.ruff.lint.per-file-ignores]
-"test/**/*.py" = ["PLR2004"]  # Bypasses "magic numbers" warning inside unit testing files
+"test/**/*.py" = ["PLR2004", "PLC0415"]  # Bypass rules for test
 
 [tool.ruff.format]
 quote-style = "double"

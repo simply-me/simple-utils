@@ -1,4 +1,3 @@
-# pylint: disable=redefined-outer-name
 """Automated verification suite for the custom registry intercept router."""
 
 from pathlib import Path

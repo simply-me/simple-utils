@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 """Automated verification suite for the main application launcher router."""
 
 import sys
