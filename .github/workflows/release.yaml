@@ -87,6 +87,7 @@ jobs:
 
           # Perform the final package scrub to remove runtime test caches
           find dist/simple-utils/ -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+          find dist/simple-utils/ -type d -name ".venv" -exec rm -rf {} + 2>/dev/null || true
           find dist/simple-utils/ -type f -name "*.pyc" -delete 2>/dev/null || true
 
           cd dist
