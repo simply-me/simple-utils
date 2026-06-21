@@ -15,6 +15,10 @@ supported modes:
 - run: use to run a command line utility
 - py: use to run an installed python module or custom simple-utils command
 
+When a file name argument contains spaces:
+
+- Use a `\"` to surround the file name e.g. `simply py pdf-compress \"pdf input file.pdf\"`
+
 simple-utils comes configured with:
 
 | Type           | Name                                             |
