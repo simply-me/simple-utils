@@ -1,3 +1,13 @@
+## v0.4.0 (2026-06-22)
+
+### Feat
+
+- display current version
+
+### Fix
+
+- rename .version to version
+
 ## v0.3.1 (2026-06-22)
 
 ### Fix
