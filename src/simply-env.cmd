@@ -50,7 +50,6 @@ GOTO :ACTIVATE_VENV
 :: Ensure the venv actually exists before trying to update it
 IF NOT EXIST "%VENV_DIR%\Scripts\activate.bat" (
     echo [ERROR] No existing environment found to update!
-    echo Creating a clean environment instead...
     echo.
     GOTO :DEFAULT_MODE
 )
