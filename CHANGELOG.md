@@ -1,3 +1,9 @@
+## v0.4.1 (2026-06-22)
+
+### Fix
+
+- **pdf_optimizer**: single progress bar
+
 ## v0.4.0 (2026-06-22)
 
 ### Feat
