@@ -87,13 +87,31 @@ def run(pdf_path: str) -> None:
         str(dest),
     ]
 
-    # Run the worker and capture potential C-layer crash exits safely
-    result = subprocess.run(worker_cmd, capture_output=True, text=True, check=False)
+    # FIXED: Use stdout=subprocess.PIPE and stderr=subprocess.PIPE instead of capture_output=True.
+    # This exposes the output streams as real-time readable buffers.
+    with subprocess.Popen(
+        worker_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        bufsize=1,  # Line-buffered real-time updates
+    ) as proc:
+        # Read the lines live as the background worker writes them
+        if proc.stdout:
+            for line in proc.stdout:
+                # If it's a layout compilation progress line, use write + flush to honor \r
+                if "Compiling Layout:" in line:
+                    sys.stdout.write(f"\r{line.strip()}")
+                    sys.stdout.flush()
+                else:
+                    # For normal title or milestone texts, print them cleanly
+                    print(line, end="")
 
-    # If the process completed successfully, forward stdout and evaluate metrics
-    if result.returncode == 0 and dest.exists():
-        print(result.stdout, end="")
+        _, stderr_output = proc.communicate()
+        return_code = proc.returncode
 
+    # If the process completed successfully, evaluate metrics
+    if return_code == 0 and dest.exists():
         orig_bytes = src.stat().st_size
         new_bytes = dest.stat().st_size
 
@@ -118,6 +136,8 @@ def run(pdf_path: str) -> None:
         print(f"\n{'-' * 50}\n[CRITICAL ERROR] The optimization engine failed.")
         print("Reason: A low-level Segmentation Fault occurred inside MuPDF's library.")
         print("        The file contains image matrices incompatible with rewrite_images().")
+        if stderr_output:
+            print(f"Details: {stderr_output.strip()}")
         print(f"{'-' * 50}")
 
         # Raise a standard clean exception so pytest registers a predictable failure
