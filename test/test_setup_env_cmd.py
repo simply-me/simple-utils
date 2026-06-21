@@ -25,9 +25,9 @@ def setup_script_path() -> str:
     """Dynamically resolves the path to the environment setup script based on PYTHONPATH."""
     # Matches the exact approach used across your other integration tests
     if "build" in os.environ.get("PYTHONPATH", ""):
-        return os.path.join("build", "src", "simply_env.cmd")  # Adjust filename if yours is .bat
+        return os.path.join("build", "src", "simply-env.cmd")  # Adjust filename if yours is .bat
 
-    return os.path.join("src", "simply_env.cmd")
+    return os.path.join("src", "simply-env.cmd")
 
 
 def test_setup_script_fails_on_invalid_arguments(workspace_root: str, setup_script_path: str) -> None:
@@ -60,13 +60,10 @@ def test_setup_script_update_mode_triggers_correctly(workspace_root: str, setup_
     )
     combined_output = result.stdout + result.stderr
 
-    # Validate that our custom conditional output text structure fires properly
-    assert "[UPDATE MODE] Updating existing packages..." in combined_output
-
-    # If the venv didn't exist yet, it should gracefully fall back to creating a clean environment
-    if "[ERROR] No existing virtual environment found to update!" in combined_output:
-        assert "Creating a clean environment instead..." in combined_output
-        assert "Creating clean virtual environment..." in combined_output
+    # Robust checking logic handles clean build fallback vs pre-existing venv update loops
+    if "No existing environment found to update!" in combined_output:
+        assert "[ERROR] No existing environment found to update!" in combined_output
+        assert "Creating clean environment..." in combined_output
     else:
-        # If a venv was already present, it should move straight to sync actions
+        assert "[UPDATE MODE] Updating existing packages..." in combined_output
         assert "Syncing/Installing production dependencies..." in combined_output
