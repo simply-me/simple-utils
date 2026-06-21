@@ -1,12 +1,25 @@
 """Simple Python CLI Application Launcher and Subprocess Router."""
 
 import argparse
+import pathlib
 import shlex
 import sys
 from typing import List
 
 import cli_runner
 import intercepts
+
+
+def get_version() -> str:
+    """Reads the static raw version number text file managed by Commitizen."""
+    try:
+        # Resolves the path to '.version' sitting right next to this main.py file
+        version_file_path = pathlib.Path(__file__).parent / ".version"
+
+        # Read the single-line string and strip trailing whitespace/newlines
+        return version_file_path.read_text(encoding="utf-8").strip()
+    except Exception:  # noqa: BLE001
+        return "no-version"
 
 
 def parse_launcher_mode(parser_args: List[str]) -> argparse.Namespace:
@@ -41,7 +54,11 @@ def main() -> None:
     parsed_config = parse_launcher_mode(forwarded_tokens)
     forwarded_args = parsed_config.downstream_args
 
-    print(f"\nRouting execution via mode: '{parsed_config.mode}'\n{'-' * 50}\n")
+    # Reads the version and prints it
+    version = get_version()
+    print(f"Simply Launcher v{version}")
+    print(f"Routing execution via mode: '{parsed_config.mode}'")
+    print(f"{'-' * 50}\n")
 
     try:
         # Run custom intercepts first
@@ -57,7 +74,7 @@ def main() -> None:
         # Cleanly bubble the exact downstream tool code without extra router text
         sys.exit(exit_code)
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         # Keep this only for unexpected crashes in python itself (e.g. system files missing)
         print(f"\n{'=' * 50}\nCRITICAL ROUTER ERROR: {e}\n{'=' * 50}\n", file=sys.stderr)
         sys.exit(1)
