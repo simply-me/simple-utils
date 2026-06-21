@@ -1,3 +1,12 @@
+## v0.3.1 (2026-06-22)
+
+### Fix
+
+- add subprocess to handle seg fault
+- **simply-env.cmd**: remove unnecessary output line
+- correct simply-env.cmd name
+- correct simply-env.cmd name
+
 ## v0.3.0 (2026-06-20)
 
 ### Feat
