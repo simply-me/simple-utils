@@ -1,10 +1,11 @@
 """Automated verification suite for the main application launcher router."""
 
+import pathlib
 import sys
 from unittest.mock import patch
 
 import pytest
-from main import main
+from main import get_version, main
 
 
 def test_router_forwards_run_mode_correctly() -> None:
@@ -105,3 +106,31 @@ def test_router_successful_intercept_bypass() -> None:
                 assert exit_wrapper.value.code == 0
                 mock_intercept.assert_called_once_with(target="custom_intercepted_tool", forwarded_args=["--flag"])
                 mock_runner.assert_not_called()
+
+
+# ==============================================================================
+# NEW: COMMITIZEN VERSION FILE TESTING COVERAGE
+# ==============================================================================
+def test_get_version_reads_file_successfully(tmp_path, monkeypatch) -> None:
+    """Verifies get_version accurately reads and strips the plain text version file."""
+    # Create an artificial version file inside a temporary test workspace
+    mock_version_file = tmp_path / "version"
+    mock_version_file.write_text("  2.4.1\n", encoding="utf-8")
+
+    # Point pathlib.Path.parent / "version" to our temporary test file
+    monkeypatch.setattr(pathlib.Path, "parent", tmp_path)
+
+    extracted_version = get_version()
+    # Confirms whitespace stripping rules evaluate correctly
+    assert extracted_version == "2.4.1"
+
+
+def test_get_version_graceful_fallback_on_missing_file(monkeypatch) -> None:
+    """Ensures get_version intercepts missing files or exceptions without crashing."""
+    # Point the parent locator path to a non-existent dummy file to trigger the except clause
+    ghost_path = pathlib.Path("ghost_folder/absent_target")
+    monkeypatch.setattr(pathlib.Path, "parent", ghost_path)
+
+    extracted_version = get_version()
+    # Confirms it safely delivers your development fallback string token
+    assert extracted_version == "no-version"

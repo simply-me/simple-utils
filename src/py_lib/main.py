@@ -13,8 +13,8 @@ import intercepts
 def get_version() -> str:
     """Reads the static raw version number text file managed by Commitizen."""
     try:
-        # Resolves the path to '.version' sitting right next to this main.py file
-        version_file_path = pathlib.Path(__file__).parent / ".version"
+        # Resolves the path to 'version' sitting right next to this main.py file
+        version_file_path = pathlib.Path(__file__).parent / "version"
 
         # Read the single-line string and strip trailing whitespace/newlines
         return version_file_path.read_text(encoding="utf-8").strip()

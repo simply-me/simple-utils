@@ -48,7 +48,7 @@ tag_format = "v$version"
 major_version_zero = true  # Guarantees breaking changes bump minor instead of v1.0.0
 version_files = [
     "pyproject.toml",
-    "src/py_lib/.version"
+    "src/py_lib/version"
 ]
 
 bump_message = "chore(release): bump version $current_version → $new_version"
