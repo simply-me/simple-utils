@@ -113,7 +113,7 @@ python -m pytest -c /dev/null -p no:cacheprovider -k "test_verify_imports_are_sa
 }
 
 # Run everything else out of the sandbox safely.
-python -m pytest -c /dev/null -p no:cacheprovider -k "not test_verify_imports_are_sandboxed" || {
+python -m pytest -c /dev/null -p no:cacheprovider --cov=build/src/py_lib --cov-report=term-missing -k "not test_verify_imports_are_sandboxed" || {
     echo
     echo "[CRITICAL] Automated unit tests failed inside pristine sandbox!"
     deactivate 2>/dev/null || true
@@ -135,7 +135,9 @@ cp -r build/src/* dist/simple-utils/
 # Package your local Commitizen changelog documentation inside the zip
 cp -f CHANGELOG.md dist/simple-utils/ 2>/dev/null || true
 
+# Clean cache files and virtual environments from distribution folder
 find dist/simple-utils/ -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+find dist/simple-utils/ -type d -name ".venv" -exec rm -rf {} + 2>/dev/null || true
 find dist/simple-utils/ -type f -name "*.pyc" -delete 2>/dev/null || true
 
 # Package the application into a zip file using native Python shutil
