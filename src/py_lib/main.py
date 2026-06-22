@@ -11,7 +11,7 @@ import intercepts
 
 
 def get_version() -> str:
-    """Reads the static raw version number text file managed by Commitizen."""
+    """Reads the version number text file managed by Commitizen."""
     try:
         # Resolves the path to 'version' sitting right next to this main.py file
         version_file_path = pathlib.Path(__file__).parent / "version"
@@ -25,7 +25,7 @@ def get_version() -> str:
 def parse_launcher_mode(parser_args: List[str]) -> argparse.Namespace:
     """Parses only the initial routing command, leaving downstream flags untouched."""
     parser = argparse.ArgumentParser(
-        description="Simply: A minimal CLI launcher and subprocess router.",
+        description="simple utils: A minimal CLI launcher and subprocess router.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -56,7 +56,7 @@ def main() -> None:
 
     # Reads the version and prints it
     version = get_version()
-    print(f"Simply Launcher v{version}")
+    print(f"\nsimple utils v{version}")
     print(f"Routing execution via mode: '{parsed_config.mode}'")
     print(f"{'-' * 50}\n")
 
