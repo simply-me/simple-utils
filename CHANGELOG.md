@@ -1,3 +1,9 @@
+## v0.4.2 (2026-06-22)
+
+### Fix
+
+- changed display name to simple utils
+
 ## v0.4.1 (2026-06-22)
 
 ### Fix
