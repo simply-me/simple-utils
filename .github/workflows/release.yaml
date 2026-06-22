@@ -92,6 +92,18 @@ jobs:
           cd dist
           python -c "import shutil; shutil.make_archive('simple-utils', 'zip', 'simple-utils')"
 
+      # Automatically purges an existing 'test-version' release before creating a fresh one
+      - name: Clear Old Sandbox Release Metadata
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          # Check if the release exists, and delete it if found to clear old text fields
+          if gh release view test-version --repo ${{ github.repository }} >/dev/null 2>&1; then
+            echo "Removing old sandbox release container..."
+            gh release delete test-version --repo ${{ github.repository }} --yes --cleanup-tag
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # Upload the final zip file directly to your GitHub Release assets matrix
       - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v3
