@@ -101,5 +101,9 @@ jobs:
           files: dist/simple-utils.zip
           generate_release_notes: true
           draft: ${{ github.event_name == 'workflow_dispatch' }}
+
+          # Passes the explicit SHA on manual runs
+          # Uses native GitHub defaults (null/omitted) on production tag pushes.
+          target_commitish: ${{ github.event_name == 'workflow_dispatch' && github.sha || null }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
